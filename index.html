@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASTS</title>
-    <!-- CSV 파싱 라이브러리 -->
+    <!-- CSV 파싱 라이브러지 -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <style>
         :root {
@@ -38,248 +38,9 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-main); display: flex; justify-content: center; padding: 20px; transition: background-color 0.2s, color 0.2s; }
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; justify-content: center; padding: 20px; transition: background-color 0.25s ease, color 0.25s ease; min-height: 100vh; }
         
-        /* 메인 컨테이너 */
-        .container { width: 100%; max-width: 1200px; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; background: var(--bg-container); box-shadow: 0 4px 16px rgba(0,0,0,0.1); min-height: 85vh; display: flex; flex-direction: column; transition: max-width 0.3s ease; }
-        
-        /* 기본(닫힘) 상태일 때는 목록이 중앙에 깔끔한 너비로 위치 */
-        .container.single-mode { max-width: 800px; }
-
-        /* 상단 검색 & 테마 바 */
-        .top-bar { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px; margin-bottom: 16px; }
-        .btn { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-        .btn:hover { background: var(--bg-card-hover); }
-        .search-box { flex: 1; display: flex; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
-        .search-box input { width: 100%; padding: 10px 14px; background: var(--bg-card); border: none; color: var(--text-main); outline: none; font-size: 14px; }
-        
-        /* 레이아웃 구조 */
-        .main-layout { display: flex; gap: 20px; flex: 1; min-height: 0; }
-        
-        /* 목록 영역 (좌측/단독) */
-        .list-pane { width: 100%; display: flex; flex-direction: column; transition: width 0.3s ease; }
-        .container:not(.single-mode) .list-pane { width: 360px; flex-shrink: 0; border-right: 1px solid var(--border-color); padding-right: 16px; }
-
-        .controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-        .tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
-        .tag-filter-btn { background: var(--bg-card); color: var(--text-sub); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 12px; font-size: 12px; cursor: pointer; font-weight: 500; }
-        .tag-filter-btn.active { background: var(--tag-bg); color: var(--tag-text); border-color: var(--tag-text); }
-        .sort-select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 6px; font-size: 12px; outline: none; cursor: pointer; }
-        
-        .list-container { flex: 1; overflow-y: auto; max-height: 72vh; padding-right: 4px; }
-        .list-container::-webkit-scrollbar { width: 6px; }
-        .list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-
-        .list-item { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 8px; background: var(--bg-card); cursor: pointer; transition: all 0.15s; }
-        .list-item:hover { background: var(--bg-card-hover); border-color: var(--tag-text); }
-        .list-item.active { background: var(--bg-card-active); border-color: var(--accent-border); border-left: 4px solid var(--accent-border); }
-        .item-row { display: flex; justify-content: space-between; align-items: center; }
-        .item-title { font-weight: 600; font-size: 15px; color: var(--text-main); }
-        .item-stars { color: var(--star-color); font-size: 13px; letter-spacing: 1px; }
-        .item-tag { background: var(--tag-bg); color: var(--tag-text); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-
-        /* 상세 내용 영역 (우측) */
-        .detail-pane { flex: 1; overflow-y: auto; max-height: 78vh; padding-left: 6px; padding-right: 6px; display: none; }
-        .detail-pane::-webkit-scrollbar { width: 6px; }
-        .detail-pane::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-
-        .detail-header-wrap { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
-        .detail-title { font-size: 24px; font-weight: bold; margin-bottom: 8px; color: var(--text-main); }
-        .detail-meta { display: flex; align-items: center; gap: 12px; }
-        .detail-stars { color: var(--star-color); font-size: 18px; letter-spacing: 2px; }
-        
-        /* 닫기 버튼 (<) */
-        .close-btn { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); width: 34px; height: 34px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: background 0.2s; flex-shrink: 0; }
-        .close-btn:hover { background: var(--bg-card-hover); border-color: var(--accent-border); }
-
-        .detail-content { font-size: 15px; line-height: 1.8; margin-bottom: 24px; white-space: pre-wrap; color: var(--text-main); }
-        .detail-media-box { border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; text-align: center; margin-bottom: 20px; background: var(--bg-card); }
-        .detail-media-box img { max-width: 100%; max-height: 500px; border-radius: 6px; object-fit: contain; }
-        .detail-media-box iframe { width: 100%; max-width: 100%; height: 400px; border: none; border-radius: 6px; }
-
-        /* 모바일 반응형 분기 */
-        @media (max-width: 768px) {
-            .container { padding: 12px; min-height: auto; }
-            .container:not(.single-mode) .list-pane { display: none; } /* 모바일에서 상세창 열리면 목록 숨김 */
-            .detail-pane { padding-left: 0; max-height: none; }
-            .detail-media-box iframe { height: 240px; }
-        }
-    </style>
-</head>
-<body>
-
-<div class="container single-mode" id="main-container">
-    <!-- 상단 바 -->
-    <div class="top-bar">
-        <div class="search-box">
-            <input type="text" id="search-input" placeholder="게시물 검색 (제목, 태그, 본문)..." oninput="applyFilters()">
-        </div>
-        <button class="btn" id="theme-btn" onclick="toggleTheme()" title="테마 변경">🌙</button>
-    </div>
-
-    <!-- 메인 레이아웃 -->
-    <div class="main-layout">
-        <!-- 목록 영역 -->
-        <div class="list-pane" id="list-pane">
-            <div class="controls">
-                <div class="tag-list" id="tag-filters"></div>
-                <select class="sort-select" id="sort-select" onchange="applyFilters()">
-                    <option value="latest">최신 등록순</option>
-                    <option value="oldest">오래된 순</option>
-                    <option value="rating-desc">별점 높은순</option>
-                    <option value="rating-asc">별점 낮은순</option>
-                </select>
-            </div>
-            <div class="list-container" id="post-list">
-                <div style="text-align: center; color: var(--text-sub); padding: 30px 0;">데이터를 불러오는 중...</div>
-            </div>
-        </div>
-
-        <!-- 상세 내용 영역 (초기 숨김) -->
-        <div class="detail-pane" id="detail-pane">
-            <div class="detail-header-wrap">
-                <div>
-                    <div class="detail-title" id="d-title"></div>
-                    <div class="detail-meta">
-                        <span class="detail-stars" id="d-stars"></span>
-                        <span class="item-tag" id="d-tag"></span>
-                    </div>
-                </div>
-                <!-- 닫기 버튼 -->
-                <button class="close-btn" onclick="closeDetail()" title="게시물 닫기">&lt;</button>
-            </div>
-            <div class="detail-content" id="d-content"></div>
-            <div class="detail-media-box" id="d-media-box" style="display: none;"></div>
-        </div>
-    </div>
-</div>
-
-<script>
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSt83M_zED5TrMWMr8Rh7JaTkqgdqlfWu9WgUXR6uLu2VIdf5Me6Hfcwo8m9PHwBbhGVNgaeciKYA2c/pub?output=csv";
-
-    let allPosts = [];
-    let selectedTag = 'ALL';
-    let currentSelectedId = null;
-
-    // 별점 렌더링
-    function renderStars(ratingNum) {
-        const rating = parseInt(ratingNum, 10) || 0;
-        const valid = Math.max(0, Math.min(5, rating));
-        return '★'.repeat(valid) + '☆'.repeat(5 - valid);
-    }
-
-    // 테마 전환 및 저장
-    function toggleTheme() {
-        const isLight = document.body.classList.toggle('light-theme');
-        localStorage.setItem('theme', isLight ? 'light' : 'dark');
-        document.getElementById('theme-btn').innerText = isLight ? '☀️' : '🌙';
-    }
-
-    // 초기 테마 로드
-    function initTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'light') {
-            document.body.classList.add('light-theme');
-            document.getElementById('theme-btn').innerText = '☀️';
-        }
-    }
-
-    // 데이터 로드
-    function loadData() {
-        Papa.parse(SHEET_CSV_URL, {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                allPosts = results.data.filter(row => row.title && row.title.trim() !== "");
-                setupTags();
-                applyFilters();
-            },
-            error: function(err) {
-                document.getElementById('post-list').innerText = "데이터를 불러오지 못했습니다. 시트 설정을 확인하세요.";
-            }
-        });
-    }
-
-    // 태그 버튼 생성
-    function setupTags() {
-        const tags = ['ALL'];
-        allPosts.forEach(p => {
-            if (p.tag && p.tag.trim()) {
-                const t = p.tag.trim();
-                if (!tags.includes(t)) tags.push(t);
-            }
-        });
-
-        const filterContainer = document.getElementById('tag-filters');
-        filterContainer.innerHTML = tags.map(tag => `
-            <button class="tag-filter-btn ${tag === selectedTag ? 'active' : ''}" onclick="filterByTag('${tag}')">
-                ${tag === 'ALL' ? '전체' : tag}
-            </button>
-        `).join('');
-    }
-
-    function filterByTag(tag) {
-        selectedTag = tag;
-        setupTags();
-        applyFilters();
-    }
-
-    // 필터 & 정렬 적용
-    function applyFilters() {
-        const query = document.getElementById('search-input').value.toLowerCase().trim();
-        const sortType = document.getElementById('sort-select').value;
-
-        let filtered = allPosts.filter(post => {
-            const matchesQuery = (post.title && post.title.toLowerCase().includes(query)) ||
-                                 (post.tag && post.tag.toLowerCase().includes(query)) ||
-                                 (post.content && post.content.toLowerCase().includes(query));
-            const matchesTag = selectedTag === 'ALL' || (post.tag && post.tag.trim() === selectedTag);
-            return matchesQuery && matchesTag;
-        });
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASTS</title>
-    <!-- CSV 파싱 라이브러리 -->
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <style>
-        :root {
-            --bg-body: #121212;
-            --bg-container: #1e1e1e;
-            --bg-card: #252525;
-            --bg-card-hover: #303030;
-            --bg-card-active: #2c384a;
-            --border-color: #383838;
-            --text-main: #f0f0f0;
-            --text-sub: #a0a0a0;
-            --tag-bg: #2d3748;
-            --tag-text: #90cdf4;
-            --star-color: #f5b301;
-            --accent-border: #4299e1;
-        }
-
-        body.light-theme {
-            --bg-body: #f1f3f5;
-            --bg-container: #ffffff;
-            --bg-card: #f8f9fa;
-            --bg-card-hover: #e9ecef;
-            --bg-card-active: #e7f5ff;
-            --border-color: #dee2e6;
-            --text-main: #212529;
-            --text-sub: #495057;
-            --tag-bg: #e7f5ff;
-            --tag-text: #1c7ed6;
-            --star-color: #f59f00;
-            --accent-border: #1c7ed6;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-main); display: flex; justify-content: center; padding: 20px; transition: background-color 0.25s ease, color 0.25s ease; }
-        
-        /* 메인 컨테이너 */
+        /* 메인 단일 컨테이너 */
         .container { width: 100%; max-width: 1200px; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; background: var(--bg-container); box-shadow: 0 4px 16px rgba(0,0,0,0.1); min-height: 85vh; display: flex; flex-direction: column; transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease, border-color 0.25s ease; }
         .container.single-mode { max-width: 800px; }
 
@@ -311,7 +72,7 @@
         .tag-filter-btn { background: var(--bg-card); color: var(--text-sub); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 12px; font-size: 12px; cursor: pointer; font-weight: 500; transition: all 0.2s ease; }
         .tag-filter-btn:hover { border-color: var(--accent-border); }
         .tag-filter-btn.active { background: var(--tag-bg); color: var(--tag-text); border-color: var(--tag-text); }
-        .sort-select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 6px; font-size: 12px; outline: none; cursor: pointer; transition: border-color 0.2s; }
+        .sort-select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 6px; font-size: 12px; outline: none; cursor: pointer; }
         
         .list-container { flex: 1; overflow-y: auto; max-height: 72vh; padding-right: 4px; }
         .list-container::-webkit-scrollbar { width: 6px; }
@@ -327,12 +88,12 @@
         .item-stars { color: var(--star-color); font-size: 13px; letter-spacing: 1px; }
         .item-tag { background: var(--tag-bg); color: var(--tag-text); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
 
-        /* 상세 내용 영역 (우측) */
+        /* 상세 내용 영역 */
         .detail-pane { flex: 1; overflow-y: auto; max-height: 78vh; padding-left: 6px; padding-right: 6px; display: none; }
         .detail-pane::-webkit-scrollbar { width: 6px; }
         .detail-pane::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
-        /* 상세 내용 전환 애니메이션 컨테이너 */
+        /* 페이드 & 슬라이드 전환 애니메이션 */
         .detail-content-wrap { animation: postFadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
         @keyframes postFadeSlide {
@@ -354,7 +115,6 @@
         .detail-media-box img { max-width: 100%; max-height: 500px; border-radius: 6px; object-fit: contain; }
         .detail-media-box iframe { width: 100%; max-width: 100%; height: 400px; border: none; border-radius: 6px; }
 
-        /* 모바일 반응형 분기 */
         @media (max-width: 768px) {
             .container { padding: 12px; min-height: auto; }
             .container:not(.single-mode) .list-pane { display: none; }
@@ -371,9 +131,7 @@
         <div class="search-box">
             <input type="text" id="search-input" placeholder="게시물 검색 (제목, 태그, 본문)..." oninput="applyFilters()">
         </div>
-        <!-- 캐시 무력화 새로고침 버튼 -->
         <button class="btn" id="refresh-btn" onclick="forceReloadData()" title="데이터 즉시 새로고침">🔄</button>
-        <!-- 테마 전환 버튼 -->
         <button class="btn" id="theme-btn" onclick="toggleTheme()" title="테마 변경">🌙</button>
     </div>
 
@@ -423,21 +181,18 @@
     let selectedTag = 'ALL';
     let currentSelectedId = null;
 
-    // 별점 렌더링
     function renderStars(ratingNum) {
         const rating = parseInt(ratingNum, 10) || 0;
         const valid = Math.max(0, Math.min(5, rating));
         return '★'.repeat(valid) + '☆'.repeat(5 - valid);
     }
 
-    // 테마 토글
     function toggleTheme() {
         const isLight = document.body.classList.toggle('light-theme');
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
         document.getElementById('theme-btn').innerText = isLight ? '☀️' : '🌙';
     }
 
-    // 테마 초기화
     function initTheme() {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'light') {
@@ -446,9 +201,7 @@
         }
     }
 
-    // 데이터 로드 (캐시 방지 타임스탬프 지원)
-    function loadData(isForced = false) {
-        // 캐시 무력화를 위해 URL 뒤에 항상 고유한 타임스탬프 쿼리를 추가
+    function loadData() {
         const requestUrl = SHEET_BASE_URL + "&_t=" + new Date().getTime();
 
         Papa.parse(requestUrl, {
@@ -460,7 +213,6 @@
                 setupTags();
                 applyFilters();
 
-                // 상세 화면이 열려있던 상태라면 갱신된 데이터로 상세창도 즉시 업데이트
                 if (currentSelectedId) {
                     openDetail(currentSelectedId);
                 }
@@ -471,17 +223,15 @@
         });
     }
 
-    // 상단 🔄 버튼 클릭 시 강제 새로고침
     function forceReloadData() {
         const btn = document.getElementById('refresh-btn');
         btn.classList.add('rotating');
-        loadData(true);
+        loadData();
         setTimeout(() => {
             btn.classList.remove('rotating');
         }, 600);
     }
 
-    // 태그 버튼 목록 생성
     function setupTags() {
         const tags = ['ALL'];
         allPosts.forEach(p => {
@@ -505,7 +255,6 @@
         applyFilters();
     }
 
-    // 통합 필터 및 정렬
     function applyFilters() {
         const query = document.getElementById('search-input').value.toLowerCase().trim();
         const sortType = document.getElementById('sort-select').value;
@@ -530,7 +279,6 @@
         renderList(filtered);
     }
 
-    // 목록 화면 그리기
     function renderList(posts) {
         const container = document.getElementById('post-list');
         if (!posts || posts.length === 0) {
@@ -554,7 +302,6 @@
         `).join('');
     }
 
-    // 상세 내용 열기 (전환 애니메이션 리셋 포함)
     function openDetail(id) {
         currentSelectedId = id;
         const post = allPosts.find(p => String(p.id).trim() === String(id).trim());
@@ -563,13 +310,11 @@
         document.getElementById('main-container').classList.remove('single-mode');
         document.getElementById('detail-pane').style.display = 'block';
 
-        // 전환 애니메이션 재실행
         const animWrap = document.getElementById('detail-anim-wrap');
         animWrap.style.animation = 'none';
-        animWrap.offsetHeight; // Reflow 강제 트리거
+        animWrap.offsetHeight;
         animWrap.style.animation = 'postFadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards';
 
-        // 목록 하이라이트 갱신
         document.querySelectorAll('.list-item').forEach(el => {
             if (el.getAttribute('data-id') === String(id)) {
                 el.classList.add('active');
@@ -578,14 +323,12 @@
             }
         });
 
-        // 텍스트, 날짜, 별점 갱신
         document.getElementById('d-title').innerText = post.title;
         document.getElementById('d-stars').innerText = renderStars(post.rating);
         document.getElementById('d-tag').innerText = post.tag ? post.tag.trim() : '기타';
         document.getElementById('d-date').innerText = post.date ? post.date.trim() : '';
         document.getElementById('d-content').innerText = post.content || '';
 
-        // 미디어(이미지/유튜브) 처리
         const mediaBox = document.getElementById('d-media-box');
         const mediaUrl = post.image_url ? post.image_url.trim() : '';
 
@@ -606,7 +349,6 @@
         }
     }
 
-    // 상세 내용 닫기 (< 버튼)
     function closeDetail() {
         currentSelectedId = null;
         document.getElementById('main-container').classList.add('single-mode');
@@ -614,7 +356,6 @@
         document.querySelectorAll('.list-item').forEach(el => el.classList.remove('active'));
     }
 
-    // 초기 실행
     initTheme();
     loadData();
 </script>
