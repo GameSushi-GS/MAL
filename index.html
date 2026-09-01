@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAL | Media Archive Log</title>
-    <!-- 브라우저 탭 아이콘 (사이트 내부 MAL 로고와 동일한 레이어 아이콘) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%234299e1'/><path d='M12 4L4 8l8 4 8-4-8-4zM4 14l8 4 8-4M4 11l8 4 8-4' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
-    <!-- CSV 파싱 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <!-- 마크다운 렌더링 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
@@ -28,11 +25,11 @@
             --accent-border: #4299e1;
             --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
             
-            --shape-fill-1: rgba(66, 153, 225, 0.18);
-            --shape-fill-2: rgba(159, 122, 234, 0.16);
-            --shape-fill-3: rgba(237, 100, 166, 0.14);
-            --shape-stroke-1: rgba(66, 153, 225, 0.32);
-            --shape-stroke-2: rgba(159, 122, 234, 0.3);
+            --shape-fill-1: rgba(66, 153, 225, 0.22);
+            --shape-fill-2: rgba(159, 122, 234, 0.2);
+            --shape-fill-3: rgba(237, 100, 166, 0.18);
+            --shape-stroke-1: rgba(66, 153, 225, 0.45);
+            --shape-stroke-2: rgba(159, 122, 234, 0.45);
         }
 
         body.light-theme {
@@ -52,11 +49,12 @@
             --accent-border: #1c7ed6;
             --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
             
-            --shape-fill-1: rgba(28, 126, 214, 0.12);
-            --shape-fill-2: rgba(121, 80, 242, 0.1);
-            --shape-fill-3: rgba(230, 73, 128, 0.1);
-            --shape-stroke-1: rgba(28, 126, 214, 0.22);
-            --shape-stroke-2: rgba(121, 80, 242, 0.22);
+            /* 화이트 모드에서 더 선명하고 뚜렷하게 보이도록 채도 상향 */
+            --shape-fill-1: rgba(28, 126, 214, 0.28);
+            --shape-fill-2: rgba(121, 80, 242, 0.24);
+            --shape-fill-3: rgba(230, 73, 128, 0.24);
+            --shape-stroke-1: rgba(28, 126, 214, 0.6);
+            --shape-stroke-2: rgba(121, 80, 242, 0.6);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -74,7 +72,7 @@
             position: relative;
         }
 
-        /* 배경 부유 도형 (부드러운 페이드 전환 + 물살 흐름 모션) */
+        /* 배경 부유 도형 */
         #bg-shapes {
             position: fixed;
             top: 0;
@@ -99,17 +97,15 @@
             animation: waterDrift 28s infinite alternate ease-in-out;
         }
 
-        /* 화면 곳곳에 분산 배치된 기하학 도형들 */
-        .shape-1 { width: 90px; height: 90px; border: 3px solid var(--shape-stroke-1); border-radius: 50%; top: 12%; left: 8%; animation-duration: 24s; }
-        .shape-2 { width: 65px; height: 65px; background: var(--shape-fill-2); border: 2px solid var(--shape-stroke-2); border-radius: 12px; bottom: 18%; left: 10%; animation-duration: 32s; animation-delay: -5s; }
-        .shape-3 { width: 110px; height: 110px; border: 3px dashed var(--shape-stroke-2); border-radius: 50%; top: 18%; right: 10%; animation-duration: 36s; animation-delay: -10s; }
-        .shape-4 { width: 80px; height: 80px; border: 3px solid var(--shape-stroke-1); border-radius: 16px; bottom: 14%; right: 12%; animation-duration: 26s; animation-delay: -15s; }
+        .shape-1 { width: 90px; height: 90px; border: 3.5px solid var(--shape-stroke-1); border-radius: 50%; top: 12%; left: 8%; animation-duration: 24s; }
+        .shape-2 { width: 65px; height: 65px; background: var(--shape-fill-2); border: 2.5px solid var(--shape-stroke-2); border-radius: 12px; bottom: 18%; left: 10%; animation-duration: 32s; animation-delay: -5s; }
+        .shape-3 { width: 110px; height: 110px; border: 3.5px dashed var(--shape-stroke-2); border-radius: 50%; top: 18%; right: 10%; animation-duration: 36s; animation-delay: -10s; }
+        .shape-4 { width: 80px; height: 80px; border: 3.5px solid var(--shape-stroke-1); border-radius: 16px; bottom: 14%; right: 12%; animation-duration: 26s; animation-delay: -15s; }
         .shape-5 { width: 45px; height: 45px; background: var(--shape-fill-3); border-radius: 50%; top: 48%; left: 4%; animation-duration: 20s; animation-delay: -8s; }
         .shape-6 { width: 55px; height: 55px; background: var(--shape-fill-1); border-radius: 10px; top: 55%; right: 6%; animation-duration: 30s; animation-delay: -18s; }
-        .shape-7 { width: 35px; height: 35px; border: 2px solid var(--shape-stroke-1); border-radius: 50%; top: 8%; left: 45%; animation-duration: 22s; animation-delay: -12s; }
+        .shape-7 { width: 35px; height: 35px; border: 2.5px solid var(--shape-stroke-1); border-radius: 50%; top: 8%; left: 45%; animation-duration: 22s; animation-delay: -12s; }
         .shape-8 { width: 40px; height: 40px; background: var(--shape-fill-2); border-radius: 8px; bottom: 6%; left: 42%; animation-duration: 34s; animation-delay: -7s; }
 
-        /* 물살에 일렁이며 떠다니는 유속 애니메이션 */
         @keyframes waterDrift {
             0% { transform: translate(0px, 0px) rotate(0deg) scale(1); }
             25% { transform: translate(25px, -35px) rotate(45deg) scale(1.05); }
@@ -182,18 +178,42 @@
         .list-pane { width: 100%; display: flex; flex-direction: column; min-height: 0; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
         .container:not(.single-mode) .list-pane { width: 380px; flex-shrink: 0; border-right: 1px solid var(--border-color); padding-right: 20px; }
 
-        .controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; flex-shrink: 0; }
-        .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
-        .tag-filter-btn { background: var(--bg-card); color: var(--text-sub); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 14px; font-size: 12px; cursor: pointer; font-weight: 500; transition: all 0.2s ease; }
+        /* 컨트롤 및 태그 영역 (줄넘김 시 덜컹거림 방지) */
+        .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; flex-shrink: 0; }
+        .controls-header { display: flex; justify-content: space-between; align-items: center; }
+        .tag-list { display: flex; flex-wrap: wrap; gap: 6px; max-height: 80px; overflow-y: auto; padding-right: 2px; }
+        .tag-list::-webkit-scrollbar { width: 4px; }
+        .tag-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+
+        .tag-filter-btn { background: var(--bg-card); color: var(--text-sub); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; font-weight: 500; transition: all 0.2s ease; flex-shrink: 0; }
         .tag-filter-btn:hover { border-color: var(--accent-border); color: var(--text-main); }
         .tag-filter-btn.active { background: var(--tag-bg); color: var(--tag-text); border-color: var(--tag-text); font-weight: 600; }
-        .sort-select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 8px; font-size: 12px; outline: none; cursor: pointer; }
+        .sort-select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 8px; font-size: 12px; outline: none; cursor: pointer; }
         
         .list-container { flex: 1; overflow-y: auto; padding-right: 6px; min-height: 0; }
         .list-container::-webkit-scrollbar { width: 6px; }
         .list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
-        .list-item { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 10px; background: var(--bg-card); cursor: pointer; transition: all 0.2s ease; }
+        /* 목록 아이템 페이드/슬라이드 인 애니메이션 */
+        .list-item { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            padding: 14px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 10px; 
+            margin-bottom: 10px; 
+            background: var(--bg-card); 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            animation: listItemFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes listItemFade {
+            0% { opacity: 0; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
         .list-item:hover { background: var(--bg-card-hover); border-color: var(--tag-text); transform: translateY(-1px); }
         .list-item.active { background: var(--bg-card-active); border-color: var(--accent-border); border-left: 4px solid var(--accent-border); transform: translateX(3px); }
         .item-row { display: flex; justify-content: space-between; align-items: center; }
@@ -224,7 +244,7 @@
         .close-btn { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; flex-shrink: 0; }
         .close-btn:hover { background: var(--bg-card-hover); border-color: var(--accent-border); transform: scale(1.05); }
 
-        /* 마크다운 스타일링 */
+        /* 마크다운 본문 */
         .detail-content { font-size: 15px; line-height: 1.8; margin-bottom: 24px; color: var(--text-main); word-break: break-word; }
         .detail-content p { margin-bottom: 12px; }
         .detail-content h1, .detail-content h2, .detail-content h3 { margin-top: 18px; margin-bottom: 8px; color: var(--text-main); }
@@ -298,7 +318,6 @@
 </head>
 <body>
 
-<!-- 넓게 분산된 유속 부유 도형들 -->
 <div id="bg-shapes">
     <div class="shape shape-1"></div>
     <div class="shape shape-2"></div>
@@ -312,7 +331,6 @@
 
 <div class="container single-mode" id="main-container">
     <div class="top-bar">
-        <!-- 상단 MAL 브랜드 로고 및 카운터 -->
         <div class="brand-wrap">
             <div class="brand-logo">
                 <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
@@ -324,32 +342,30 @@
         <div class="search-box">
             <input type="text" id="search-input" placeholder="게시물 검색 (제목, 태그, 본문)..." oninput="applyFilters()">
         </div>
-        <!-- 배경 효과 토글 버튼 -->
         <button class="btn" id="effect-btn" onclick="toggleShapesEffect()" title="배경 애니메이션 효과 켜기/끄기">✨</button>
-        <!-- 데이터 새로고침 버튼 -->
         <button class="btn" id="refresh-btn" onclick="forceReloadData()" title="데이터 즉시 새로고침">🔄</button>
-        <!-- 테마 전환 버튼 -->
         <button class="btn" id="theme-btn" onclick="toggleTheme()" title="테마 변경">🌙</button>
     </div>
 
     <div class="main-layout">
-        <!-- 목록 영역 -->
         <div class="list-pane" id="list-pane">
             <div class="controls">
+                <div class="controls-header">
+                    <span style="font-size: 11px; font-weight: 600; color: var(--text-sub);">TAGS</span>
+                    <select class="sort-select" id="sort-select" onchange="applyFilters()">
+                        <option value="latest">최신 등록순</option>
+                        <option value="oldest">오래된 순</option>
+                        <option value="rating-desc">별점 높은순</option>
+                        <option value="rating-asc">별점 낮은순</option>
+                    </select>
+                </div>
                 <div class="tag-list" id="tag-filters"></div>
-                <select class="sort-select" id="sort-select" onchange="applyFilters()">
-                    <option value="latest">최신 등록순</option>
-                    <option value="oldest">오래된 순</option>
-                    <option value="rating-desc">별점 높은순</option>
-                    <option value="rating-asc">별점 낮은순</option>
-                </select>
             </div>
             <div class="list-container" id="post-list">
                 <div style="text-align: center; color: var(--text-sub); padding: 30px 0;">데이터를 불러오는 중...</div>
             </div>
         </div>
 
-        <!-- 상세 내용 영역 -->
         <div class="detail-pane" id="detail-pane">
             <div class="detail-content-wrap" id="detail-anim-wrap">
                 <div class="detail-header-wrap">
@@ -398,7 +414,6 @@
         }
     }
 
-    // 부드러운 페이드 ON/OFF 토글
     function toggleShapesEffect() {
         const shapesElem = document.getElementById('bg-shapes');
         const btn = document.getElementById('effect-btn');
@@ -515,9 +530,10 @@
             return;
         }
 
-        container.innerHTML = posts.map(post => `
+        container.innerHTML = posts.map((post, idx) => `
             <div class="list-item ${String(post.id).trim() === String(currentSelectedId).trim() ? 'active' : ''}" 
                  data-id="${post.id}" 
+                 style="animation-delay: ${Math.min(idx * 0.02, 0.2)}s;"
                  onclick="openDetail('${post.id}')">
                 <div class="item-row">
                     <span class="item-title">${post.title}</span>
