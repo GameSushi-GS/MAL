@@ -64,7 +64,13 @@
             --shape-stroke-2: rgba(121, 80, 242, 0.6);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            transition: background-color 0.28s ease, color 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+        }
         
         html, body { height: 100%; overflow: hidden; }
         body { 
@@ -75,7 +81,6 @@
             justify-content: center; 
             align-items: center; 
             padding: 20px; 
-            transition: background 0.3s ease, color 0.3s ease; 
             position: relative;
         }
 
@@ -137,7 +142,7 @@
             flex-direction: column; 
             position: relative;
             z-index: 1;
-            transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, border-color 0.3s ease; 
+            transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.28s ease, border-color 0.28s ease; 
         }
         .container.single-mode { max-width: 820px; }
 
@@ -248,7 +253,90 @@
         .tag-filter-btn.active { background: var(--tag-bg); color: var(--tag-text); border-color: var(--tag-text); font-weight: 600; }
         .tag-count { font-size: 10px; opacity: 0.75; }
 
-        .sort-select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 8px; font-size: 12px; outline: none; cursor: pointer; }
+        /* 모던 커스텀 드롭다운 스타일 */
+        .custom-select-wrap {
+            position: relative;
+            user-select: none;
+            width: 120px;
+        }
+
+        .custom-select-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 11px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .custom-select-trigger:hover, .custom-select-wrap.open .custom-select-trigger {
+            border-color: var(--accent-border);
+            background: var(--bg-card-hover);
+        }
+
+        .custom-select-arrow {
+            font-size: 9px;
+            color: var(--text-sub);
+            transition: transform 0.25s ease;
+        }
+
+        .custom-select-wrap.open .custom-select-arrow {
+            transform: rotate(180deg);
+            color: var(--accent-border);
+        }
+
+        .custom-select-options {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            width: 100%;
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 5px;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            z-index: 60;
+            animation: menuFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .custom-select-wrap.open .custom-select-options {
+            display: flex;
+        }
+
+        .custom-option {
+            padding: 7px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.15s ease;
+        }
+
+        .custom-option:hover {
+            background: var(--bg-card-hover);
+            color: var(--accent-border);
+        }
+
+        .custom-option.selected {
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            font-weight: 600;
+        }
         
         .list-container { flex: 1; overflow-y: auto; padding-right: 6px; min-height: 0; }
         .list-container::-webkit-scrollbar { width: 6px; }
@@ -485,12 +573,19 @@
             <div class="controls">
                 <div class="controls-header">
                     <span style="font-size: 11px; font-weight: 600; color: var(--text-sub);">TAGS</span>
-                    <select class="sort-select" id="sort-select" onchange="applyFilters()">
-                        <option value="latest">최신 등록순</option>
-                        <option value="oldest">오래된 순</option>
-                        <option value="rating-desc">별점 높은순</option>
-                        <option value="rating-asc">별점 낮은순</option>
-                    </select>
+                    
+                    <div class="custom-select-wrap" id="custom-sort-wrap">
+                        <div class="custom-select-trigger" onclick="toggleCustomSelect(event)">
+                            <span id="selected-sort-label">최신 등록순</span>
+                            <span class="custom-select-arrow">▼</span>
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-option selected" data-value="latest" onclick="selectSortOption('latest', '최신 등록순')">최신 등록순</div>
+                            <div class="custom-option" data-value="oldest" onclick="selectSortOption('oldest', '오래된 순')">오래된 순</div>
+                            <div class="custom-option" data-value="rating-desc" onclick="selectSortOption('rating-desc', '별점 높은순')">별점 높은순</div>
+                            <div class="custom-option" data-value="rating-asc" onclick="selectSortOption('rating-asc', '별점 낮은순')">별점 낮은순</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="tag-list" id="tag-filters"></div>
             </div>
@@ -539,6 +634,7 @@
 
     let allPosts = [];
     let selectedTag = 'ALL';
+    let currentSortType = 'latest';
     let currentSelectedId = null;
     let toastTimer = null;
 
@@ -555,12 +651,35 @@
         return '★'.repeat(valid) + '☆'.repeat(5 - valid);
     }
 
-    // 날짜 문자열(YYYY-MM-DD, YYYY.MM.DD 등)을 정렬용 타임스탬프로 안전하게 변환하는 헬퍼 함수
+    // 날짜 문자열(YYYY-MM-DD, YYYY.MM.DD 등)을 정렬용 타임스탬프로 변환
     function parseDateToTime(dateStr) {
         if (!dateStr || !dateStr.trim()) return 0;
         const cleaned = dateStr.trim().replace(/\./g, '-');
         const time = new Date(cleaned).getTime();
         return isNaN(time) ? 0 : time;
+    }
+
+    // 커스텀 드롭다운 제어 함수
+    function toggleCustomSelect(e) {
+        if (e) e.stopPropagation();
+        const wrap = document.getElementById('custom-sort-wrap');
+        wrap.classList.toggle('open');
+    }
+
+    function selectSortOption(val, label) {
+        currentSortType = val;
+        document.getElementById('selected-sort-label').innerText = label;
+
+        document.querySelectorAll('.custom-option').forEach(opt => {
+            if (opt.getAttribute('data-value') === val) {
+                opt.classList.add('selected');
+            } else {
+                opt.classList.remove('selected');
+            }
+        });
+
+        document.getElementById('custom-sort-wrap').classList.remove('open');
+        applyFilters();
     }
 
     function toggleSettingsMenu(e) {
@@ -569,11 +688,17 @@
         menu.classList.toggle('show');
     }
 
+    // 외부 영역 클릭 시 열린 메뉴/드롭다운 닫기
     document.addEventListener('click', function(e) {
         const menu = document.getElementById('settings-menu');
         const btn = document.getElementById('settings-btn');
         if (menu.classList.contains('show') && !menu.contains(e.target) && !btn.contains(e.target)) {
             menu.classList.remove('show');
+        }
+
+        const sortWrap = document.getElementById('custom-sort-wrap');
+        if (sortWrap.classList.contains('open') && !sortWrap.contains(e.target)) {
+            sortWrap.classList.remove('open');
         }
     });
 
@@ -682,7 +807,6 @@
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
-                // 원본 시트의 행 순서(_rowIndex)를 기록하여 보존
                 allPosts = results.data
                     .filter(row => row.title && row.title.trim() !== "")
                     .map((row, index) => ({ ...row, _rowIndex: index }));
@@ -738,10 +862,8 @@
         applyFilters();
     }
 
-    // 실제 날짜(date) 비교 기반 정렬 로직
     function applyFilters() {
         const query = document.getElementById('search-input').value.toLowerCase().trim();
-        const sortType = document.getElementById('sort-select').value;
 
         let filtered = allPosts.filter(post => {
             const matchesQuery = (post.title && post.title.toLowerCase().includes(query)) ||
@@ -753,28 +875,25 @@
             return matchesQuery && matchesTag;
         });
 
-        // 실제 날짜 및 별점 정렬 계산
-        if (sortType === 'latest') {
+        if (currentSortType === 'latest') {
             filtered.sort((a, b) => {
                 const timeA = parseDateToTime(a.date);
                 const timeB = parseDateToTime(b.date);
-                // 날짜가 둘 다 있으면 최신 날짜(큰 값) 우선, 날짜가 없거나 같으면 시트 아래쪽 행 우선
                 if (timeA !== timeB) return timeB - timeA;
                 return b._rowIndex - a._rowIndex;
             });
-        } else if (sortType === 'oldest') {
+        } else if (currentSortType === 'oldest') {
             filtered.sort((a, b) => {
                 const timeA = parseDateToTime(a.date);
                 const timeB = parseDateToTime(b.date);
-                // 날짜가 둘 다 있으면 오래된 날짜(작은 값) 우선, 날짜 없는 글은 뒤로
                 if (timeA && timeB) return timeA - timeB;
                 if (timeA && !timeB) return -1;
                 if (!timeA && timeB) return 1;
                 return a._rowIndex - b._rowIndex;
             });
-        } else if (sortType === 'rating-desc') {
+        } else if (currentSortType === 'rating-desc') {
             filtered.sort((a, b) => (parseInt(b.rating, 10) || 0) - (parseInt(a.rating, 10) || 0));
-        } else if (sortType === 'rating-asc') {
+        } else if (currentSortType === 'rating-asc') {
             filtered.sort((a, b) => (parseInt(a.rating, 10) || 0) - (parseInt(b.rating, 10) || 0));
         }
 
