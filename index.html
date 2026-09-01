@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASTS</title>
-    <!-- CSV 파싱 라이브러지 -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --bg-body: #121212;
@@ -38,14 +38,14 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-main); display: flex; justify-content: center; padding: 20px; transition: background-color 0.25s ease, color 0.25s ease; min-height: 100vh; }
         
-        /* 메인 단일 컨테이너 */
-        .container { width: 100%; max-width: 1200px; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; background: var(--bg-container); box-shadow: 0 4px 16px rgba(0,0,0,0.1); min-height: 85vh; display: flex; flex-direction: column; transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease, border-color 0.25s ease; }
+        html, body { height: 100%; overflow: hidden; }
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; justify-content: center; align-items: center; padding: 20px; transition: background-color 0.25s ease, color 0.25s ease; }
+        
+        .container { width: 100%; max-width: 1200px; height: calc(100vh - 40px); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; background: var(--bg-container); box-shadow: 0 4px 16px rgba(0,0,0,0.1); display: flex; flex-direction: column; transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease, border-color 0.25s ease; }
         .container.single-mode { max-width: 800px; }
 
-        /* 상단 검색 & 컨트롤 바 */
-        .top-bar { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px; margin-bottom: 16px; }
+        .top-bar { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px; margin-bottom: 16px; flex-shrink: 0; }
         .btn { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
         .btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
         .btn:active { transform: scale(0.95); }
@@ -60,21 +60,19 @@
         .search-box:focus-within { border-color: var(--accent-border); }
         .search-box input { width: 100%; padding: 10px 14px; background: var(--bg-card); border: none; color: var(--text-main); outline: none; font-size: 14px; }
         
-        /* 메인 레이아웃 */
         .main-layout { display: flex; gap: 20px; flex: 1; min-height: 0; }
         
-        /* 목록 영역 */
-        .list-pane { width: 100%; display: flex; flex-direction: column; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .list-pane { width: 100%; display: flex; flex-direction: column; min-height: 0; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .container:not(.single-mode) .list-pane { width: 360px; flex-shrink: 0; border-right: 1px solid var(--border-color); padding-right: 16px; }
 
-        .controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; flex-shrink: 0; }
         .tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
         .tag-filter-btn { background: var(--bg-card); color: var(--text-sub); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 12px; font-size: 12px; cursor: pointer; font-weight: 500; transition: all 0.2s ease; }
         .tag-filter-btn:hover { border-color: var(--accent-border); }
         .tag-filter-btn.active { background: var(--tag-bg); color: var(--tag-text); border-color: var(--tag-text); }
         .sort-select { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 6px; font-size: 12px; outline: none; cursor: pointer; }
         
-        .list-container { flex: 1; overflow-y: auto; max-height: 72vh; padding-right: 4px; }
+        .list-container { flex: 1; overflow-y: auto; padding-right: 4px; min-height: 0; }
         .list-container::-webkit-scrollbar { width: 6px; }
         .list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
@@ -89,11 +87,10 @@
         .item-tag { background: var(--tag-bg); color: var(--tag-text); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
 
         /* 상세 내용 영역 */
-        .detail-pane { flex: 1; overflow-y: auto; max-height: 78vh; padding-left: 6px; padding-right: 6px; display: none; }
+        .detail-pane { flex: 1; overflow-y: auto; padding-left: 6px; padding-right: 6px; display: none; min-height: 0; }
         .detail-pane::-webkit-scrollbar { width: 6px; }
         .detail-pane::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
-        /* 페이드 & 슬라이드 전환 애니메이션 */
         .detail-content-wrap { animation: postFadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
         @keyframes postFadeSlide {
@@ -110,23 +107,45 @@
         .close-btn { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); width: 34px; height: 34px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; flex-shrink: 0; }
         .close-btn:hover { background: var(--bg-card-hover); border-color: var(--accent-border); transform: scale(1.05); }
 
-        .detail-content { font-size: 15px; line-height: 1.8; margin-bottom: 24px; white-space: pre-wrap; color: var(--text-main); }
-        .detail-media-box { border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; text-align: center; margin-bottom: 20px; background: var(--bg-card); }
-        .detail-media-box img { max-width: 100%; max-height: 500px; border-radius: 6px; object-fit: contain; }
-        .detail-media-box iframe { width: 100%; max-width: 100%; height: 400px; border: none; border-radius: 6px; }
+        /* 마크다운 본문 스타일링 */
+        .detail-content { font-size: 15px; line-height: 1.8; margin-bottom: 24px; color: var(--text-main); word-break: break-word; }
+        .detail-content p { margin-bottom: 12px; }
+        .detail-content h1, .detail-content h2, .detail-content h3 { margin-top: 16px; margin-bottom: 8px; color: var(--text-main); }
+        .detail-content ul, .detail-content ol { padding-left: 20px; margin-bottom: 12px; }
+        .detail-content li { margin-bottom: 4px; }
+        .detail-content a { color: var(--accent-border); text-decoration: underline; }
+        .detail-content blockquote { border-left: 4px solid var(--accent-border); padding-left: 12px; color: var(--text-sub); margin: 12px 0; }
+        .detail-content code { background: var(--bg-card); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+
+        /* 미디어 & 이미지 카드 영역 */
+        .media-container { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+        .media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+        
+        .image-card { position: relative; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: var(--bg-card); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .image-card.has-link { cursor: pointer; transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+        .image-card.has-link:hover { transform: translateY(-3px); border-color: var(--accent-border); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .image-card img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
+        
+        /* 링크 배지 표시 */
+        .link-badge { position: absolute; top: 8px; right: 8px; background: rgba(0, 0, 0, 0.7); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px); }
+        .image-card.has-link:hover .link-badge { background: var(--accent-border); }
+
+        .youtube-box { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: var(--bg-card); margin-bottom: 12px; }
+        .youtube-box iframe { width: 100%; height: 380px; border: none; display: block; }
 
         @media (max-width: 768px) {
-            .container { padding: 12px; min-height: auto; }
+            html, body { overflow: auto; height: auto; }
+            .container { padding: 12px; height: auto; min-height: 90vh; }
             .container:not(.single-mode) .list-pane { display: none; }
+            .list-container { max-height: 60vh; }
             .detail-pane { padding-left: 0; max-height: none; }
-            .detail-media-box iframe { height: 240px; }
+            .youtube-box iframe { height: 240px; }
         }
     </style>
 </head>
 <body>
 
 <div class="container single-mode" id="main-container">
-    <!-- 상단 바 -->
     <div class="top-bar">
         <div class="search-box">
             <input type="text" id="search-input" placeholder="게시물 검색 (제목, 태그, 본문)..." oninput="applyFilters()">
@@ -135,9 +154,7 @@
         <button class="btn" id="theme-btn" onclick="toggleTheme()" title="테마 변경">🌙</button>
     </div>
 
-    <!-- 메인 레이아웃 -->
     <div class="main-layout">
-        <!-- 목록 영역 -->
         <div class="list-pane" id="list-pane">
             <div class="controls">
                 <div class="tag-list" id="tag-filters"></div>
@@ -153,7 +170,6 @@
             </div>
         </div>
 
-        <!-- 상세 내용 영역 -->
         <div class="detail-pane" id="detail-pane">
             <div class="detail-content-wrap" id="detail-anim-wrap">
                 <div class="detail-header-wrap">
@@ -167,8 +183,10 @@
                     </div>
                     <button class="close-btn" onclick="closeDetail()" title="게시물 닫기">&lt;</button>
                 </div>
+                
+                <div class="media-container" id="d-media-container" style="display: none;"></div>
+
                 <div class="detail-content" id="d-content"></div>
-                <div class="detail-media-box" id="d-media-box" style="display: none;"></div>
             </div>
         </div>
     </div>
@@ -302,6 +320,76 @@
         `).join('');
     }
 
+    // 미디어(다중 이미지, 링크, 유튜브) 렌더링 함수
+    function renderMedia(rawUrlString) {
+        const container = document.getElementById('d-media-container');
+        if (!rawUrlString || !rawUrlString.trim()) {
+            container.style.display = 'none';
+            container.innerHTML = '';
+            return;
+        }
+
+        // 줄바꿈 또는 쉼표 기준으로 항목 분리
+        const items = rawUrlString.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+        let youtubeHtml = '';
+        let imageCardsHtml = '';
+
+        items.forEach(item => {
+            // 유튜브 영상 판별
+            if (item.includes('youtube.com/watch?v=') || item.includes('youtu.be/')) {
+                let videoId = '';
+                if (item.includes('youtu.be/')) {
+                    videoId = item.split('youtu.be/')[1].split('?')[0];
+                } else {
+                    videoId = new URL(item).searchParams.get('v');
+                }
+                youtubeHtml += `
+                    <div class="youtube-box">
+                        <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>
+                    </div>
+                `;
+            } else {
+                // 이미지 & 링크 판별 (구분자: ' > ')
+                let imgSrc = item;
+                let targetUrl = '';
+
+                if (item.includes('>')) {
+                    const parts = item.split('>');
+                    imgSrc = parts[0].trim();
+                    targetUrl = parts[1].trim();
+                }
+
+                if (targetUrl) {
+                    imageCardsHtml += `
+                        <a class="image-card has-link" href="${targetUrl}" target="_blank" rel="noopener noreferrer">
+                            <span class="link-badge">🔗 링크 열기</span>
+                            <img src="${imgSrc}" alt="이미지 링크" loading="lazy">
+                        </a>
+                    `;
+                } else {
+                    imageCardsHtml += `
+                        <div class="image-card">
+                            <img src="${imgSrc}" alt="이미지" loading="lazy">
+                        </div>
+                    `;
+                }
+            }
+        });
+
+        let totalHtml = youtubeHtml;
+        if (imageCardsHtml) {
+            totalHtml += `<div class="media-grid">${imageCardsHtml}</div>`;
+        }
+
+        if (totalHtml) {
+            container.innerHTML = totalHtml;
+            container.style.display = 'flex';
+        } else {
+            container.style.display = 'none';
+            container.innerHTML = '';
+        }
+    }
+
     function openDetail(id) {
         currentSelectedId = id;
         const post = allPosts.find(p => String(p.id).trim() === String(id).trim());
@@ -327,26 +415,12 @@
         document.getElementById('d-stars').innerText = renderStars(post.rating);
         document.getElementById('d-tag').innerText = post.tag ? post.tag.trim() : '기타';
         document.getElementById('d-date').innerText = post.date ? post.date.trim() : '';
-        document.getElementById('d-content').innerText = post.content || '';
+        
+        // 마크다운 파싱 적용
+        document.getElementById('d-content').innerHTML = marked.parse(post.content || '');
 
-        const mediaBox = document.getElementById('d-media-box');
-        const mediaUrl = post.image_url ? post.image_url.trim() : '';
-
-        if (mediaUrl.includes('youtube.com/watch?v=') || mediaUrl.includes('youtu.be/')) {
-            let videoId = '';
-            if (mediaUrl.includes('youtu.be/')) {
-                videoId = mediaUrl.split('youtu.be/')[1].split('?')[0];
-            } else {
-                videoId = new URL(mediaUrl).searchParams.get('v');
-            }
-            mediaBox.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>`;
-            mediaBox.style.display = 'block';
-        } else if (mediaUrl.startsWith('http')) {
-            mediaBox.innerHTML = `<img src="${mediaUrl}" alt="리뷰 이미지">`;
-            mediaBox.style.display = 'block';
-        } else {
-            mediaBox.style.display = 'none';
-        }
+        // 미디어(다중 이미지, 링크, 유튜브) 렌더링
+        renderMedia(post.image_url);
     }
 
     function closeDetail() {
