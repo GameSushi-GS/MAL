@@ -2,4 +2,4 @@
 
 기존에 구글 시트로 추천 목록을 작성했었지만, 가독성이 너무 안 좋아서 Gemini 써서 게시물 형태로 재탄생했어요.
 
-[ASTS 바로가기](https://gamesushi-gs.github.io/ASTS/)
+[MAL 바로가기](https://gamesushi-gs.github.io/MAL/)
