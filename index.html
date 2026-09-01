@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTS</title>
+    <!-- CSV 파싱 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #121212; color: #e0e0e0; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 800px; border: 1px solid #333; border-radius: 8px; padding: 16px; background: #1e1e1e; }
+        
+        /* 상단 바 */
+        .top-bar { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 14px; margin-bottom: 16px; }
+        .home-btn { background: #2a2a2a; color: white; border: 1px solid #444; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        .home-btn:hover { background: #383838; }
+        .search-box { flex: 1; display: flex; border: 1px solid #444; border-radius: 6px; overflow: hidden; }
+        .search-box input { width: 100%; padding: 8px 12px; background: #2a2a2a; border: none; color: white; outline: none; font-size: 14px; }
+        
+        /* 메인 화면: 게시물 목록 */
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid #333; border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
+        .list-item:hover { background: #2a2a2a; border-color: #555; }
+        .item-title { font-weight: 600; font-size: 16px; color: #fff; }
+        .item-info { display: flex; align-items: center; gap: 12px; }
+        .item-stars { color: #f5b301; font-size: 14px; letter-spacing: 1px; }
+        .item-tag { background: #2d3748; color: #90cdf4; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+
+        /* 내부 화면: 상세 보기 */
+        #detail-view { display: none; }
+        .detail-title { font-size: 22px; font-weight: bold; margin-bottom: 8px; padding-bottom: 10px; border-bottom: 1px solid #333; color: #fff; }
+        .detail-stars { color: #f5b301; font-size: 16px; margin-bottom: 16px; letter-spacing: 2px; }
+        .detail-content { font-size: 15px; line-height: 1.7; margin-bottom: 20px; white-space: pre-wrap; color: #d1d5db; }
+        .detail-image-box { border: 1px solid #333; border-radius: 6px; padding: 12px; text-align: center; margin-bottom: 20px; background: #181818; }
+        .detail-image-box img { max-width: 100%; max-height: 450px; border-radius: 4px; object-fit: contain; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 상단 바 -->
+    <div class="top-bar">
+        <button class="home-btn" id="home-btn" onclick="showList()" title="목록으로 이동">🏠</button>
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="게시물 검색 (제목, 태그, 내용)..." oninput="handleSearch()">
+        </div>
+    </div>
+
+    <!-- 메인: 목록 화면 -->
+    <div id="list-view">
+        <div id="post-list" style="text-align: center; color: #888; padding: 30px 0;">데이터를 불러오는 중...</div>
+    </div>
+
+    <!-- 상세: 게시물 내부 화면 -->
+    <div id="detail-view">
+        <div class="detail-title" id="d-title"></div>
+        <div class="detail-stars" id="d-stars"></div>
+        <div class="detail-content" id="d-content"></div>
+        <div class="detail-image-box" id="d-img-box" style="display: none;">
+            <img id="d-img" src="" alt="리뷰 이미지">
+        </div>
+    </div>
+</div>
+
+<script>
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSt83M_zED5TrMWMr8Rh7JaTkqgdqlfWu9WgUXR6uLu2VIdf5Me6Hfcwo8m9PHwBbhGVNgaeciKYA2c/pub?output=csv";
+
+    let allPosts = [];
+
+    // 별점 숫자를 이모지로 변환하는 함수 (예: 4 -> ★★★★☆)
+    function renderStars(ratingNum) {
+        const rating = parseInt(ratingNum, 10) || 0;
+        const validRating = Math.max(0, Math.min(5, rating));
+        return '★'.repeat(validRating) + '☆'.repeat(5 - validRating);
+    }
+
+    // 구글 시트 데이터 로드
+    function loadData() {
+        Papa.parse(SHEET_CSV_URL, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                allPosts = results.data.filter(row => row.title && row.title.trim() !== "");
+                renderList(allPosts);
+            },
+            error: function(err) {
+                document.getElementById('post-list').innerText = "데이터를 불러오는 데 실패했습니다. 구글 시트 게시 설정을 확인해 주세요.";
+            }
+        });
+    }
+
+    // 목록 렌더링
+    function renderList(posts) {
+        const container = document.getElementById('post-list');
+        if (!posts || posts.length === 0) {
+            container.innerHTML = "<p style='color: #888; text-align: center; padding: 30px;'>게시물이 없습니다.</p>";
+            return;
+        }
+
+        container.innerHTML = posts.map(post => `
+            <div class="list-item" onclick="showDetail('${post.id}')">
+                <span class="item-title">${post.title}</span>
+                <div class="item-info">
+                    <span class="item-stars">${renderStars(post.rating)}</span>
+                    <span class="item-tag">${post.tag ? post.tag.trim() : '일반'}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 검색 처리
+    function handleSearch() {
+        const query = document.getElementById('search-input').value.toLowerCase().trim();
+        const filtered = allPosts.filter(post => 
+            (post.title && post.title.toLowerCase().includes(query)) ||
+            (post.tag && post.tag.toLowerCase().includes(query)) ||
+            (post.content && post.content.toLowerCase().includes(query))
+        );
+        renderList(filtered);
+    }
+
+    // 상세 화면 보기
+    function showDetail(id) {
+        const post = allPosts.find(p => String(p.id).trim() === String(id).trim());
+        if (!post) return;
+
+        document.getElementById('d-title').innerText = post.title;
+        document.getElementById('d-stars').innerText = renderStars(post.rating);
+        document.getElementById('d-content').innerText = post.content || '';
+
+        const imgBox = document.getElementById('d-img-box');
+        const imgElem = document.getElementById('d-img');
+        if (post.image_url && post.image_url.trim().startsWith('http')) {
+            imgElem.src = post.image_url.trim();
+            imgBox.style.display = 'block';
+        } else {
+            imgBox.style.display = 'none';
+        }
+
+        document.getElementById('list-view').style.display = 'none';
+        document.getElementById('detail-view').style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    // 목록으로 돌아가기
+    function showList() {
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('list-view').style.display = 'block';
+    }
+
+    // 초기 실행
+    loadData();
+</script>
+
+</body>
+</html>
