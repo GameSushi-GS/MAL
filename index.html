@@ -25,6 +25,11 @@
             --accent-border: #4299e1;
             --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
             
+            /* 보라색 시리즈 뱃지 스타일 */
+            --series-bg: rgba(159, 122, 234, 0.18);
+            --series-text: #b794f4;
+            --series-border: rgba(159, 122, 234, 0.35);
+
             --shape-fill-1: rgba(66, 153, 225, 0.22);
             --shape-fill-2: rgba(159, 122, 234, 0.2);
             --shape-fill-3: rgba(237, 100, 166, 0.18);
@@ -49,7 +54,10 @@
             --accent-border: #1c7ed6;
             --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
             
-            /* 화이트 모드에서 더 선명하고 뚜렷하게 보이도록 채도 상향 */
+            --series-bg: #f3e8ff;
+            --series-text: #7e22ce;
+            --series-border: #d8b4fe;
+
             --shape-fill-1: rgba(28, 126, 214, 0.28);
             --shape-fill-2: rgba(121, 80, 242, 0.24);
             --shape-fill-3: rgba(230, 73, 128, 0.24);
@@ -178,7 +186,7 @@
         .list-pane { width: 100%; display: flex; flex-direction: column; min-height: 0; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
         .container:not(.single-mode) .list-pane { width: 380px; flex-shrink: 0; border-right: 1px solid var(--border-color); padding-right: 20px; }
 
-        /* 컨트롤 및 태그 영역 (줄넘김 시 덜컹거림 방지) */
+        /* 컨트롤 및 태그 영역 */
         .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; flex-shrink: 0; }
         .controls-header { display: flex; justify-content: space-between; align-items: center; }
         .tag-list { display: flex; flex-wrap: wrap; gap: 6px; max-height: 80px; overflow-y: auto; padding-right: 2px; }
@@ -194,7 +202,7 @@
         .list-container::-webkit-scrollbar { width: 6px; }
         .list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
-        /* 목록 아이템 페이드/슬라이드 인 애니메이션 */
+        /* 목록 아이템 */
         .list-item { 
             display: flex; 
             flex-direction: column; 
@@ -218,10 +226,14 @@
         .list-item.active { background: var(--bg-card-active); border-color: var(--accent-border); border-left: 4px solid var(--accent-border); transform: translateX(3px); }
         .item-row { display: flex; justify-content: space-between; align-items: center; }
         .item-title { font-weight: 600; font-size: 15px; color: var(--text-main); }
+        .item-badges { display: flex; align-items: center; gap: 6px; }
         .item-meta { display: flex; align-items: center; gap: 8px; }
         .item-date { font-size: 11px; color: var(--text-sub); }
         .item-stars { color: var(--star-color); font-size: 13px; letter-spacing: 1px; }
         .item-tag { background: var(--tag-bg); color: var(--tag-text); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        
+        /* 보라색 시리즈 뱃지 (목록) */
+        .series-badge { background: var(--series-bg); color: var(--series-text); border: 1px solid var(--series-border); padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
 
         /* 상세 영역 */
         .detail-pane { flex: 1; overflow-y: auto; padding-left: 4px; padding-right: 6px; display: none; min-height: 0; }
@@ -306,6 +318,14 @@
         .youtube-box { border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; background: var(--bg-card); }
         .youtube-box iframe { width: 100%; height: 380px; border: none; display: block; }
 
+        /* 하단 시리즈 모아보기 섹션 */
+        .series-section { margin-top: 30px; padding: 18px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--series-border); }
+        .series-header { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--series-text); margin-bottom: 12px; }
+        .series-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .series-item-btn { background: var(--bg-container); color: var(--text-main); border: 1px solid var(--border-color); padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; }
+        .series-item-btn:hover { border-color: var(--series-text); transform: translateY(-1px); }
+        .series-item-btn.current { background: var(--series-bg); color: var(--series-text); border-color: var(--series-border); font-weight: 700; cursor: default; }
+
         @media (max-width: 768px) {
             html, body { overflow: auto; height: auto; }
             .container { padding: 14px; height: auto; min-height: 90vh; }
@@ -381,7 +401,15 @@
                 </div>
                 
                 <div class="media-container" id="d-media-container" style="display: none;"></div>
+
                 <div class="detail-content" id="d-content"></div>
+
+                <div class="series-section" id="d-series-section" style="display: none;">
+                    <div class="series-header">
+                        <span>📚</span> <span id="d-series-title">시리즈 연계작</span>
+                    </div>
+                    <div class="series-list" id="d-series-list"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -507,6 +535,7 @@
             const matchesQuery = (post.title && post.title.toLowerCase().includes(query)) ||
                                  (post.tag && post.tag.toLowerCase().includes(query)) ||
                                  (post.content && post.content.toLowerCase().includes(query)) ||
+                                 (post.series && post.series.toLowerCase().includes(query)) ||
                                  (post.date && post.date.toLowerCase().includes(query));
             const matchesTag = selectedTag === 'ALL' || (post.tag && post.tag.trim() === selectedTag);
             return matchesQuery && matchesTag;
@@ -537,7 +566,10 @@
                  onclick="openDetail('${post.id}')">
                 <div class="item-row">
                     <span class="item-title">${post.title}</span>
-                    <span class="item-tag">${post.tag ? post.tag.trim() : '기타'}</span>
+                    <div class="item-badges">
+                        ${post.series && post.series.trim() ? '<span class="series-badge">📚 시리즈</span>' : ''}
+                        <span class="item-tag">${post.tag ? post.tag.trim() : '기타'}</span>
+                    </div>
                 </div>
                 <div class="item-row">
                     <span class="item-stars">${renderStars(post.rating)}</span>
@@ -613,6 +645,41 @@
         }
     }
 
+    // 하단 시리즈 목록 렌더링 함수
+    function renderSeriesSection(currentPost) {
+        const section = document.getElementById('d-series-section');
+        const list = document.getElementById('d-series-list');
+        const titleElem = document.getElementById('d-series-title');
+
+        if (!currentPost.series || !currentPost.series.trim()) {
+            section.style.display = 'none';
+            list.innerHTML = '';
+            return;
+        }
+
+        const seriesName = currentPost.series.trim();
+        const relatedPosts = allPosts.filter(p => p.series && p.series.trim() === seriesName);
+
+        if (relatedPosts.length <= 1) {
+            section.style.display = 'none';
+            return;
+        }
+
+        titleElem.innerText = `${seriesName} 시리즈 (${relatedPosts.length}개 작품)`;
+        list.innerHTML = relatedPosts.map(p => {
+            const isCurrent = String(p.id).trim() === String(currentPost.id).trim();
+            return `
+                <button class="series-item-btn ${isCurrent ? 'current' : ''}" 
+                        onclick="${isCurrent ? '' : `openDetail('${p.id}')`}">
+                    <span>${p.title}</span>
+                    <span style="font-size: 11px; opacity: 0.85;">${renderStars(p.rating)}</span>
+                </button>
+            `;
+        }).join('');
+
+        section.style.display = 'block';
+    }
+
     function openDetail(id) {
         currentSelectedId = id;
         const post = allPosts.find(p => String(p.id).trim() === String(id).trim());
@@ -641,6 +708,7 @@
         
         document.getElementById('d-content').innerHTML = marked.parse(post.content || '');
         renderMedia(post.image_url);
+        renderSeriesSection(post);
     }
 
     function closeDetail() {
