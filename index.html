@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAL | Media Archive Log</title>
-    <!-- 브라우저 탭 아이콘 (사이트 내부 MAL 로고와 동일한 레이어 아이콘) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%234299e1'/><path d='M12 4L4 8l8 4 8-4-8-4zM4 14l8 4 8-4M4 11l8 4 8-4' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
-    <!-- CSV 파싱 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <!-- 마크다운 렌더링 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
@@ -385,23 +382,50 @@
         /* 토스트 알림창 */
         #toast {
             position: fixed;
-            bottom: 24px;
+            bottom: 28px;
             left: 50%;
-            transform: translateX(-50%) translateY(50px);
-            background: rgba(18, 22, 28, 0.95);
-            color: #fff;
-            padding: 10px 20px;
+            transform: translateX(-50%) translateY(40px) scale(0.95);
+            background: rgba(18, 22, 28, 0.94);
+            color: #f3f4f6;
+            padding: 10px 22px;
             border-radius: 30px;
             font-size: 13px;
             font-weight: 600;
             border: 1px solid var(--accent-border);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.45);
             opacity: 0;
             pointer-events: none;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 100;
+            white-space: nowrap;
+            max-width: 85vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        body.light-theme #toast {
+            background: rgba(255, 255, 255, 0.96);
+            color: #1f2937;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        #toast.show { 
+            opacity: 1; 
+            transform: translateX(-50%) translateY(0) scale(1); 
+        }
+
+        #toast.bounce {
+            animation: toastPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes toastPop {
+            0% { transform: translateX(-50%) translateY(0) scale(0.9); }
+            50% { transform: translateX(-50%) translateY(-6px) scale(1.04); }
+            100% { transform: translateX(-50%) translateY(0) scale(1); }
+        }
 
         @media (max-width: 768px) {
             html, body { overflow: auto; height: auto; }
@@ -415,7 +439,6 @@
 </head>
 <body>
 
-<!-- 넓게 분산된 유속 부유 도형들 -->
 <div id="bg-shapes">
     <div class="shape shape-1"></div>
     <div class="shape shape-2"></div>
@@ -429,26 +452,21 @@
 
 <div class="container single-mode" id="main-container">
     <div class="top-bar">
-        <!-- 상단 MAL 브랜드 로고 -->
         <div class="brand-logo">
             <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             MAL
         </div>
 
-        <!-- 검색창 + ✕ 초기화 버튼 -->
         <div class="search-box">
             <input type="text" id="search-input" placeholder="게시물 검색 (제목, 태그, 본문)..." oninput="handleSearchInput()">
             <button class="search-clear-btn" id="search-clear-btn" onclick="clearSearch()" title="검색어 지우기">✕</button>
         </div>
 
-        <!-- 랜덤 추천 주사위 버튼 -->
         <button class="btn" id="random-btn" onclick="openRandomPost()" title="무작위 추천">🎲</button>
-        <!-- 데이터 새로고침 버튼 -->
         <button class="btn" id="refresh-btn" onclick="forceReloadData()" title="데이터 즉시 새로고침">🔄</button>
         
-        <!-- 설정 드롭다운 메뉴 -->
         <div class="settings-wrap">
-            <button class="btn" id="settings-btn" onclick="toggleSettingsMenu()" title="설정">⚙️</button>
+            <button class="btn" id="settings-btn" onclick="toggleSettingsMenu(event)" title="설정">⚙️</button>
             <div class="settings-menu" id="settings-menu">
                 <div class="settings-item">
                     <span>테마 모드</span>
@@ -463,7 +481,6 @@
     </div>
 
     <div class="main-layout">
-        <!-- 목록 영역 -->
         <div class="list-pane" id="list-pane">
             <div class="controls">
                 <div class="controls-header">
@@ -482,7 +499,6 @@
             </div>
         </div>
 
-        <!-- 상세 내용 영역 -->
         <div class="detail-pane" id="detail-pane">
             <div class="detail-content-wrap" id="detail-anim-wrap">
                 <div class="detail-header-wrap">
@@ -497,9 +513,7 @@
                         </div>
                     </div>
                     <div class="detail-header-btns">
-                        <!-- 링크 복사 버튼 -->
                         <button class="icon-btn" onclick="copyPostLink()" title="게시물 링크 복사">🔗</button>
-                        <!-- 닫기 버튼 -->
                         <button class="icon-btn" onclick="closeDetail()" title="게시물 닫기">&lt;</button>
                     </div>
                 </div>
@@ -507,7 +521,6 @@
                 <div class="media-container" id="d-media-container" style="display: none;"></div>
                 <div class="detail-content" id="d-content"></div>
 
-                <!-- 시리즈 모아보기 -->
                 <div class="series-section" id="d-series-section" style="display: none;">
                     <div class="series-header">
                         <span>📚</span> <span id="d-series-title">시리즈 연계작</span>
@@ -519,8 +532,7 @@
     </div>
 </div>
 
-<!-- 토스트 알림 -->
-<div id="toast">링크가 클립보드에 복사되었습니다!</div>
+<div id="toast"></div>
 
 <script>
     const SHEET_BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSt83M_zED5TrMWMr8Rh7JaTkqgdqlfWu9WgUXR6uLu2VIdf5Me6Hfcwo8m9PHwBbhGVNgaeciKYA2c/pub?output=csv";
@@ -528,8 +540,9 @@
     let allPosts = [];
     let selectedTag = 'ALL';
     let currentSelectedId = null;
+    let toastTimer = null;
 
-    // 마크다운 외부 링크 항상 새 탭 열기 렌더러
+    // 마크다운 외부 링크 새 탭 열기 렌더러
     const renderer = new marked.Renderer();
     renderer.link = function(href, title, text) {
         return `<a target="_blank" rel="noopener noreferrer" href="${href}" title="${title || ''}">${text}</a>`;
@@ -542,14 +555,20 @@
         return '★'.repeat(valid) + '☆'.repeat(5 - valid);
     }
 
-    // 설정 드롭다운 메뉴 토글
+    // 날짜 문자열(YYYY-MM-DD, YYYY.MM.DD 등)을 정렬용 타임스탬프로 안전하게 변환하는 헬퍼 함수
+    function parseDateToTime(dateStr) {
+        if (!dateStr || !dateStr.trim()) return 0;
+        const cleaned = dateStr.trim().replace(/\./g, '-');
+        const time = new Date(cleaned).getTime();
+        return isNaN(time) ? 0 : time;
+    }
+
     function toggleSettingsMenu(e) {
         if (e) e.stopPropagation();
         const menu = document.getElementById('settings-menu');
         menu.classList.toggle('show');
     }
 
-    // 바깥 클릭 시 설정 메뉴 닫기
     document.addEventListener('click', function(e) {
         const menu = document.getElementById('settings-menu');
         const btn = document.getElementById('settings-btn');
@@ -558,7 +577,6 @@
         }
     });
 
-    // 테마 설정
     function toggleTheme() {
         const isLight = document.body.classList.toggle('light-theme');
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
@@ -575,7 +593,6 @@
         }
     }
 
-    // 배경 도형 효과 설정
     function toggleShapesEffect() {
         const shapesElem = document.getElementById('bg-shapes');
         const btn = document.getElementById('effect-toggle-btn');
@@ -609,8 +626,18 @@
     function showToast(message) {
         const toast = document.getElementById('toast');
         toast.innerText = message;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2200);
+
+        if (toastTimer) {
+            clearTimeout(toastTimer);
+        }
+
+        toast.classList.remove('bounce');
+        void toast.offsetWidth;
+        toast.classList.add('show', 'bounce');
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove('show', 'bounce');
+        }, 2000);
     }
 
     function copyPostLink() {
@@ -628,7 +655,9 @@
         const randomIndex = Math.floor(Math.random() * allPosts.length);
         const randomPost = allPosts[randomIndex];
         openDetail(randomPost.id);
-        showToast(`🎲 '${randomPost.title}' 추천!`);
+        
+        const safeTitle = randomPost.title.length > 14 ? randomPost.title.slice(0, 14) + '...' : randomPost.title;
+        showToast(`🎲 '${safeTitle}' 추천!`);
     }
 
     function handleSearchInput() {
@@ -653,7 +682,11 @@
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
-                allPosts = results.data.filter(row => row.title && row.title.trim() !== "");
+                // 원본 시트의 행 순서(_rowIndex)를 기록하여 보존
+                allPosts = results.data
+                    .filter(row => row.title && row.title.trim() !== "")
+                    .map((row, index) => ({ ...row, _rowIndex: index }));
+
                 setupTags();
                 applyFilters();
 
@@ -674,6 +707,7 @@
         const btn = document.getElementById('refresh-btn');
         btn.classList.add('rotating');
         loadData();
+        showToast('🔄 최신 데이터 동기화 완료');
         setTimeout(() => {
             btn.classList.remove('rotating');
         }, 600);
@@ -704,6 +738,7 @@
         applyFilters();
     }
 
+    // 실제 날짜(date) 비교 기반 정렬 로직
     function applyFilters() {
         const query = document.getElementById('search-input').value.toLowerCase().trim();
         const sortType = document.getElementById('sort-select').value;
@@ -718,8 +753,25 @@
             return matchesQuery && matchesTag;
         });
 
+        // 실제 날짜 및 별점 정렬 계산
         if (sortType === 'latest') {
-            filtered.reverse();
+            filtered.sort((a, b) => {
+                const timeA = parseDateToTime(a.date);
+                const timeB = parseDateToTime(b.date);
+                // 날짜가 둘 다 있으면 최신 날짜(큰 값) 우선, 날짜가 없거나 같으면 시트 아래쪽 행 우선
+                if (timeA !== timeB) return timeB - timeA;
+                return b._rowIndex - a._rowIndex;
+            });
+        } else if (sortType === 'oldest') {
+            filtered.sort((a, b) => {
+                const timeA = parseDateToTime(a.date);
+                const timeB = parseDateToTime(b.date);
+                // 날짜가 둘 다 있으면 오래된 날짜(작은 값) 우선, 날짜 없는 글은 뒤로
+                if (timeA && timeB) return timeA - timeB;
+                if (timeA && !timeB) return -1;
+                if (!timeA && timeB) return 1;
+                return a._rowIndex - b._rowIndex;
+            });
         } else if (sortType === 'rating-desc') {
             filtered.sort((a, b) => (parseInt(b.rating, 10) || 0) - (parseInt(a.rating, 10) || 0));
         } else if (sortType === 'rating-asc') {
