@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAL | Media Archive Log</title>
-    <!-- 브라우저 탭 아이콘 (사이트 로고와 완벽히 동일한 레이어 SVG) -->
+    <!-- 브라우저 탭 아이콘 (사이트 로고와 동일한 레이어 SVG) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%234299e1'/><path d='M12 4L4 8l8 4 8-4-8-4zM4 14l8 4 8-4M4 11l8 4 8-4' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
     <!-- CSV 파싱 & 마크다운 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
-            /* 상단 바와 배경 톤 분리 (다크 모드) */
             --bg-body: #0a0d12;
             --bg-header: #141922;
             --bg-card: #181f2a;
@@ -31,7 +30,6 @@
         }
 
         body.light-theme {
-            /* 상단 바와 배경 톤 분리 (라이트 모드) */
             --bg-body: #f4f6f8;
             --bg-header: #ffffff;
             --bg-card: #ffffff;
@@ -100,9 +98,11 @@
             font-size: 14px;
             font-weight: 800;
             letter-spacing: 0.5px;
+            transition: transform 0.15s ease;
         }
+        .nav-logo-badge:hover { transform: scale(1.02); }
+        .nav-logo-badge:active { transform: scale(0.97); }
 
-        /* 탭 파비콘과 동일한 SVG 아이콘 */
         .nav-logo-badge svg {
             width: 15px;
             height: 15px;
@@ -187,8 +187,24 @@
             padding: 24px 32px;
             display: grid;
             grid-template-columns: 340px minmax(0, 1fr);
-            gap: 0; /* 분리선을 위해 간격 조정 */
+            gap: 0;
             align-items: start;
+            transition: all 0.3s ease;
+        }
+
+        /* 💡 글이 닫혀 있을 때 (홈 상태): 목록이 전체 화면을 차지하도록 확장 */
+        main.main-viewport.closed-view {
+            max-width: 880px;
+            grid-template-columns: 1fr;
+        }
+        main.main-viewport.closed-view aside.sidebar-pane {
+            border-right: none;
+            padding-right: 0;
+            position: static;
+            max-height: none;
+        }
+        main.main-viewport.closed-view section.content-pane {
+            display: none;
         }
 
         /* 좌측: 사이드바 + 우측 분리선 */
@@ -200,7 +216,7 @@
             gap: 16px;
             max-height: calc(100vh - 108px);
             padding-right: 28px;
-            border-right: 1px solid var(--border-color); /* 목록과 본문 사이의 깔끔한 구분선 */
+            border-right: 1px solid var(--border-color);
         }
 
         .filter-area {
@@ -335,7 +351,6 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            /* 덜컹거림 방지: 순수 페이드인만 적용 */
             animation: cleanFade 0.2s ease forwards;
         }
 
@@ -394,17 +409,6 @@
             min-height: calc(100vh - 108px);
         }
 
-        .empty-placeholder {
-            min-height: 480px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-sub);
-            gap: 14px;
-        }
-
-        /* 글 전환 시 튀지 않는 부드러운 페이드 */
         .article-content-wrap {
             animation: contentSmoothFade 0.22s ease-out forwards;
         }
@@ -444,8 +448,13 @@
             letter-spacing: 2px;
         }
 
-        /* 🔗 공유 버튼 */
-        .share-badge-btn {
+        .post-header-btns {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-badge-btn {
             background: var(--bg-card);
             color: var(--text-main);
             border: 1px solid var(--border-color);
@@ -460,7 +469,7 @@
             transition: all 0.2s ease;
         }
 
-        .share-badge-btn:hover {
+        .action-badge-btn:hover {
             background: var(--bg-card-hover);
             border-color: var(--accent-border);
             color: var(--accent-border);
@@ -686,7 +695,8 @@
 
 <!-- 1. 상단 글로벌 네비게이션 헤더 -->
 <header class="global-nav">
-    <div class="nav-left" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+    <!-- 💡 로고 클릭 시 글 닫기 및 홈 화면 복귀 -->
+    <div class="nav-left" onclick="closeDetail()" title="메인 화면으로 돌아가기">
         <div class="nav-logo-badge">
             <svg viewBox="0 0 24 24"><path d="M12 4L4 8l8 4 8-4-8-4zM4 14l8 4 8-4M4 11l8 4 8-4"/></svg>
             MAL
@@ -707,8 +717,8 @@
     </div>
 </header>
 
-<!-- 2. 웹사이트 메인 레이아웃 -->
-<main class="main-viewport">
+<!-- 2. 웹사이트 메인 레이아웃 (기본: closed-view) -->
+<main class="main-viewport closed-view" id="main-viewport">
     <!-- 좌측 목록 & 필터 영역 -->
     <aside class="sidebar-pane">
         <div class="filter-area">
@@ -740,12 +750,7 @@
 
     <!-- 우측 본문 열람 뷰포트 -->
     <section class="content-pane" id="detail-view">
-        <div class="empty-placeholder" id="placeholder-box">
-            <span style="font-size: 42px;">📖</span>
-            <p>목록에서 게시물을 선택하거나 상단 🎲 주사위를 눌러보세요.</p>
-        </div>
-
-        <div id="article-box" class="article-content-wrap" style="display: none;">
+        <div id="article-box" class="article-content-wrap">
             <!-- 유튜브 영상 전용 상단 영역 -->
             <div id="d-yt-container" style="display: none;"></div>
 
@@ -758,11 +763,18 @@
                         <span id="d-date"></span>
                     </div>
                 </div>
-                <!-- 🔗 공유 뱃지 버튼 -->
-                <button class="share-badge-btn" onclick="copyPostLink()" title="게시물 링크 복사">
-                    <span>🔗</span>
-                    <span>공유</span>
-                </button>
+                <div class="post-header-btns">
+                    <!-- 🔗 공유 버튼 -->
+                    <button class="action-badge-btn" onclick="copyPostLink()" title="게시물 링크 복사">
+                        <span>🔗</span>
+                        <span>공유</span>
+                    </button>
+                    <!-- ✕ 닫기 버튼 -->
+                    <button class="action-badge-btn" onclick="closeDetail()" title="게시물 닫기">
+                        <span>✕</span>
+                        <span>닫기</span>
+                    </button>
+                </div>
             </div>
 
             <!-- 이미지와 글이 나란히 공존하는 본문 레이아웃 -->
@@ -906,10 +918,12 @@
                 setupTags();
                 applyFilters();
 
-                // 첫 접속 시 해시(#)가 있을 때만 자동 열기, 없으면 대기 상태 유지
+                // URL 해시(#)가 명시되어 있을 때만 글 열기
                 const hash = decodeURIComponent(window.location.hash.replace('#', '')).trim();
                 if (hash) {
                     openDetail(hash);
+                } else {
+                    closeDetail(); // 초기에는 닫힌 전체 목록 상태로 대기
                 }
             },
             error: function() {
@@ -1047,7 +1061,6 @@
                 let imgSrc = item;
                 let targetUrl = '';
 
-                // 이미지(링크) 형식 파싱: https://img.png(https://site.com)
                 const match = item.match(/^(https?:\/\/[^\s()]+)\((https?:\/\/[^\s()]+)\)$/);
                 if (match) {
                     imgSrc = match[1].trim();
@@ -1132,11 +1145,10 @@
 
         history.replaceState(null, null, '#' + encodeURIComponent(id));
 
-        document.getElementById('placeholder-box').style.display = 'none';
-        const articleBox = document.getElementById('article-box');
-        articleBox.style.display = 'block';
+        // 💡 본문 열기: 2열 분할 레이아웃 활성화
+        document.getElementById('main-viewport').classList.remove('closed-view');
 
-        // 부드러운 페이드 재적용
+        const articleBox = document.getElementById('article-box');
         articleBox.classList.remove('article-content-wrap');
         void articleBox.offsetWidth;
         articleBox.classList.add('article-content-wrap');
@@ -1157,6 +1169,15 @@
         if (window.innerWidth <= 960) {
             document.getElementById('detail-view').scrollIntoView({ behavior: 'smooth' });
         }
+    }
+
+    // 💡 게시물 닫기 (메인 화면 및 넓은 목록 뷰 복귀)
+    function closeDetail() {
+        currentSelectedId = null;
+        history.replaceState(null, null, window.location.pathname);
+        document.getElementById('main-viewport').classList.add('closed-view');
+        document.querySelectorAll('.archive-item').forEach(el => el.classList.remove('active'));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     initTheme();
