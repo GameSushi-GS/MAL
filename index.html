@@ -56,7 +56,6 @@
             transition: background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease;
         }
 
-        /* 💡 화이트 모드 하단 잘림 버그 완벽 해결 */
         html {
             height: 100%;
             background-color: var(--bg-body);
@@ -181,12 +180,23 @@
             justify-content: center;
             cursor: pointer;
             font-size: 15px;
-            transition: all 0.2s ease;
+            position: relative;
         }
 
         .icon-btn:hover {
             background: var(--bg-card-hover);
             border-color: var(--accent-border);
+        }
+
+        /* 새로고침 아이콘 전용 회전 */
+        .refresh-icon {
+            display: inline-block;
+            line-height: 1;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .refresh-icon.rotating {
+            transform: rotate(360deg);
         }
 
         /* 2. 메인 뷰포트 레이아웃 */
@@ -203,7 +213,6 @@
             transition: max-width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* 💡 글이 닫혀 있을 때 (홈 상태): 부드러운 와이드 전환 */
         main.main-viewport.closed-view {
             max-width: 860px;
             grid-template-columns: 1fr;
@@ -357,21 +366,18 @@
         .list-scroll-view::-webkit-scrollbar { width: 4px; }
         .list-scroll-view::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
 
+        /* 💡 1. 목록 선택 하이라이트 부드러운 전환 */
         .archive-item {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
+            border-left: 3px solid transparent;
             border-radius: 8px;
             padding: 13px 15px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             gap: 6px;
-            animation: cleanFade 0.18s ease-out forwards;
-        }
-
-        @keyframes cleanFade {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
+            transition: background-color 0.22s ease, border-color 0.22s ease, transform 0.15s ease;
         }
 
         .archive-item:hover {
@@ -382,7 +388,7 @@
         .archive-item.active {
             background: var(--bg-card-active);
             border-color: var(--accent-border);
-            border-left: 4px solid var(--accent-border);
+            border-left: 3px solid var(--accent-border);
         }
 
         .item-row {
@@ -424,12 +430,13 @@
             min-height: calc(100vh - 108px);
         }
 
-        .article-content-wrap {
-            animation: contentSmoothFade 0.22s ease-out forwards;
+        /* 💡 4. 전체 깜빡임 대신 내용물만 부드럽게 디졸브 페이드 */
+        .anim-fade {
+            animation: textFade 0.25s ease-out forwards;
         }
 
-        @keyframes contentSmoothFade {
-            0% { opacity: 0; }
+        @keyframes textFade {
+            0% { opacity: 0.3; }
             100% { opacity: 1; }
         }
 
@@ -726,7 +733,10 @@
 
     <div class="nav-right">
         <button class="icon-btn" onclick="openRandomPost()" title="랜덤 추천">🎲</button>
-        <button class="icon-btn" id="refresh-btn" onclick="forceReloadData()" title="데이터 새로고침">🔄</button>
+        <!-- 💡 2, 3. 버튼 자체는 돌지 않고 내부 아이콘만 회전 + 테마 속도 동기화 -->
+        <button class="icon-btn" id="refresh-btn" onclick="forceReloadData()" title="데이터 새로고침">
+            <span class="refresh-icon" id="refresh-icon">🔄</span>
+        </button>
         <button class="icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="테마 전환">🌙</button>
     </div>
 </header>
@@ -764,7 +774,7 @@
 
     <!-- 우측 본문 열람 뷰포트 -->
     <section class="content-pane" id="detail-view">
-        <div id="article-box" class="article-content-wrap">
+        <div id="article-box">
             <!-- 유튜브 영상 전용 상단 영역 -->
             <div id="d-yt-container" style="display: none;"></div>
 
@@ -945,15 +955,14 @@
         });
     }
 
+    // 💡 2, 3. 내부 아이콘만 부드럽게 회전
     function forceReloadData() {
-        const btn = document.getElementById('refresh-btn');
-        btn.style.transform = 'rotate(360deg)';
-        btn.style.transition = 'transform 0.6s ease';
+        const icon = document.getElementById('refresh-icon');
+        icon.classList.add('rotating');
         loadData();
         showToast('🔄 최신 데이터 동기화 완료');
         setTimeout(() => {
-            btn.style.transform = 'none';
-            btn.style.transition = 'none';
+            icon.classList.remove('rotating');
         }, 600);
     }
 
@@ -1151,6 +1160,13 @@
         section.style.display = 'block';
     }
 
+    function triggerFade(element) {
+        if (!element) return;
+        element.classList.remove('anim-fade');
+        void element.offsetWidth; // Reflow 트리거
+        element.classList.add('anim-fade');
+    }
+
     function openDetail(id) {
         currentSelectedId = id;
         const post = allPosts.find(p => String(p.id).trim() === String(id).trim());
@@ -1160,23 +1176,34 @@
 
         document.getElementById('main-viewport').classList.remove('closed-view');
 
-        const articleBox = document.getElementById('article-box');
-        articleBox.classList.remove('article-content-wrap');
-        void articleBox.offsetWidth;
-        articleBox.classList.add('article-content-wrap');
-
+        // 목록 하이라이트 동기화
         document.querySelectorAll('.archive-item').forEach(el => {
             el.classList.toggle('active', el.getAttribute('data-id') === String(id));
         });
 
-        document.getElementById('d-title').innerText = post.title;
-        document.getElementById('d-stars').innerText = renderStars(post.rating);
-        document.getElementById('d-tag').innerText = post.tag ? post.tag.trim() : '기타';
-        document.getElementById('d-date').innerText = post.date ? post.date.trim() : '';
+        // 💡 4. 전체가 아닌 변경되는 텍스트와 본문 컨테이너에만 부드러운 디졸브 페이드 트리거
+        const dTitle = document.getElementById('d-title');
+        const dStars = document.getElementById('d-stars');
+        const dTag = document.getElementById('d-tag');
+        const dDate = document.getElementById('d-date');
+        const dContent = document.getElementById('d-content');
+        const dMedia = document.getElementById('d-media-container');
+
+        dTitle.innerText = post.title;
+        dStars.innerText = renderStars(post.rating);
+        dTag.innerText = post.tag ? post.tag.trim() : '기타';
+        dDate.innerText = post.date ? post.date.trim() : '';
+        dContent.innerHTML = marked.parse(post.content || '');
         
-        document.getElementById('d-content').innerHTML = marked.parse(post.content || '');
         renderMedia(post.image_url);
         renderSeriesSection(post);
+
+        triggerFade(dTitle);
+        triggerFade(dStars);
+        triggerFade(dTag);
+        triggerFade(dDate);
+        triggerFade(dContent);
+        triggerFade(dMedia);
 
         if (window.innerWidth <= 960) {
             document.getElementById('detail-view').scrollIntoView({ behavior: 'smooth' });
