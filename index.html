@@ -180,7 +180,6 @@
             justify-content: center;
             cursor: pointer;
             font-size: 15px;
-            position: relative;
         }
 
         .icon-btn:hover {
@@ -188,15 +187,19 @@
             border-color: var(--accent-border);
         }
 
-        /* 새로고침 아이콘 전용 회전 */
+        /* 💡 1. 되감기 버그 없는 순방향 단일 회전 애니메이션 */
         .refresh-icon {
             display: inline-block;
             line-height: 1;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .refresh-icon.rotating {
-            transform: rotate(360deg);
+        .refresh-icon.spin-active {
+            animation: spinOnce 0.6s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+        }
+
+        @keyframes spinOnce {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* 2. 메인 뷰포트 레이아웃 */
@@ -366,7 +369,6 @@
         .list-scroll-view::-webkit-scrollbar { width: 4px; }
         .list-scroll-view::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
 
-        /* 💡 1. 목록 선택 하이라이트 부드러운 전환 */
         .archive-item {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -430,13 +432,12 @@
             min-height: calc(100vh - 108px);
         }
 
-        /* 💡 4. 전체 깜빡임 대신 내용물만 부드럽게 디졸브 페이드 */
         .anim-fade {
-            animation: textFade 0.25s ease-out forwards;
+            animation: textFade 0.2s ease-out forwards;
         }
 
         @keyframes textFade {
-            0% { opacity: 0.3; }
+            0% { opacity: 0.35; }
             100% { opacity: 1; }
         }
 
@@ -446,7 +447,7 @@
             justify-content: space-between;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .post-title-line {
@@ -497,12 +498,71 @@
             color: var(--accent-border);
         }
 
-        /* 본문과 이미지 레이아웃 (매거진 2열 배치) */
+        /* 💡 2. 시리즈 연계작 바 (헤더 바로 아래 또는 인포 영역) */
+        .series-inline-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--series-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            transition: border-color 0.2s ease;
+        }
+
+        .series-inline-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--series-text);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .series-inline-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .series-link-btn {
+            background: var(--bg-body);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.18s ease;
+        }
+
+        .series-link-btn:hover {
+            border-color: var(--series-text);
+            color: var(--series-text);
+        }
+
+        .series-link-btn.current {
+            background: var(--series-bg);
+            color: var(--series-text);
+            border-color: var(--series-border);
+            font-weight: 700;
+            cursor: default;
+        }
+
+        /* 본문과 이미지 레이아웃 */
         .content-body-layout {
             display: flex;
             gap: 32px;
             align-items: flex-start;
             margin-bottom: 32px;
+            min-height: 220px;
         }
 
         /* 좌측 미디어/포스터 덱 */
@@ -601,51 +661,6 @@
             display: block;
         }
 
-        /* 하단 시리즈 링크 */
-        .series-box {
-            border-top: 1px solid var(--border-color);
-            padding-top: 24px;
-            margin-top: 24px;
-        }
-
-        .series-box-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--series-text);
-            margin-bottom: 12px;
-        }
-
-        .series-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .series-link-btn {
-            background: var(--bg-card);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 7px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-        }
-
-        .series-link-btn:hover { border-color: var(--series-text); }
-        .series-link-btn.current {
-            background: var(--series-bg);
-            color: var(--series-text);
-            border-color: var(--series-border);
-            font-weight: 700;
-        }
-
         /* 토스트 알림창 */
         #toast {
             position: fixed;
@@ -733,7 +748,7 @@
 
     <div class="nav-right">
         <button class="icon-btn" onclick="openRandomPost()" title="랜덤 추천">🎲</button>
-        <!-- 💡 2, 3. 버튼 자체는 돌지 않고 내부 아이콘만 회전 + 테마 속도 동기화 -->
+        <!-- 💡 되감기 버그 제거된 순방향 새로고침 버튼 -->
         <button class="icon-btn" id="refresh-btn" onclick="forceReloadData()" title="데이터 새로고침">
             <span class="refresh-icon" id="refresh-icon">🔄</span>
         </button>
@@ -801,6 +816,14 @@
                 </div>
             </div>
 
+            <!-- 💡 2. 상단 헤더 바로 아래에 자연스럽게 자리잡은 시리즈 바 -->
+            <div class="series-inline-box" id="d-series-section" style="display: none;">
+                <div class="series-inline-title">
+                    <span>📚</span> <span id="d-series-title">시리즈</span>
+                </div>
+                <div class="series-inline-list" id="d-series-list"></div>
+            </div>
+
             <!-- 이미지와 글이 나란히 공존하는 본문 레이아웃 -->
             <div class="content-body-layout">
                 <!-- 좌측 포스터 이미지 -->
@@ -808,14 +831,6 @@
 
                 <!-- 우측 마크다운 리뷰 본문 -->
                 <article class="markdown-body" id="d-content"></article>
-            </div>
-
-            <!-- 하단 시리즈 연계 박스 -->
-            <div class="series-box" id="d-series-section" style="display: none;">
-                <div class="series-box-title">
-                    <span>📚</span> <span id="d-series-title">시리즈 연계작</span>
-                </div>
-                <div class="series-links" id="d-series-list"></div>
             </div>
         </div>
     </section>
@@ -955,14 +970,17 @@
         });
     }
 
-    // 💡 2, 3. 내부 아이콘만 부드럽게 회전
+    // 💡 1. 역회전 없이 순방향 회전
     function forceReloadData() {
         const icon = document.getElementById('refresh-icon');
-        icon.classList.add('rotating');
+        icon.classList.remove('spin-active');
+        void icon.offsetWidth; // Reflow 트리거
+        icon.classList.add('spin-active');
+
         loadData();
         showToast('🔄 최신 데이터 동기화 완료');
         setTimeout(() => {
-            icon.classList.remove('rotating');
+            icon.classList.remove('spin-active');
         }, 600);
     }
 
@@ -1127,6 +1145,7 @@
         }
     }
 
+    // 💡 2. 상단 인라인 시리즈 렌더링
     function renderSeriesSection(currentPost) {
         const section = document.getElementById('d-series-section');
         const list = document.getElementById('d-series-list');
@@ -1145,7 +1164,7 @@
             return;
         }
 
-        titleElem.innerText = `${sName} 시리즈 (${related.length}개 작품)`;
+        titleElem.innerText = `${sName}`;
         list.innerHTML = related.map(p => {
             const isCurrent = String(p.id).trim() === String(currentPost.id).trim();
             return `
@@ -1157,13 +1176,13 @@
             `;
         }).join('');
 
-        section.style.display = 'block';
+        section.style.display = 'flex';
     }
 
     function triggerFade(element) {
         if (!element) return;
         element.classList.remove('anim-fade');
-        void element.offsetWidth; // Reflow 트리거
+        void element.offsetWidth;
         element.classList.add('anim-fade');
     }
 
@@ -1176,12 +1195,10 @@
 
         document.getElementById('main-viewport').classList.remove('closed-view');
 
-        // 목록 하이라이트 동기화
         document.querySelectorAll('.archive-item').forEach(el => {
             el.classList.toggle('active', el.getAttribute('data-id') === String(id));
         });
 
-        // 💡 4. 전체가 아닌 변경되는 텍스트와 본문 컨테이너에만 부드러운 디졸브 페이드 트리거
         const dTitle = document.getElementById('d-title');
         const dStars = document.getElementById('d-stars');
         const dTag = document.getElementById('d-tag');
@@ -1203,7 +1220,9 @@
         triggerFade(dTag);
         triggerFade(dDate);
         triggerFade(dContent);
-        triggerFade(dMedia);
+        if (post.image_url && post.image_url.trim()) {
+            triggerFade(dMedia);
+        }
 
         if (window.innerWidth <= 960) {
             document.getElementById('detail-view').scrollIntoView({ behavior: 'smooth' });
