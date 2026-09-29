@@ -4,48 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAL | Media Archive Log</title>
-    <!-- 브라우저 탭 아이콘 (SVG 파비콘) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%234299e1'/><path d='M12 4L4 8l8 4 8-4-8-4zM4 14l8 4 8-4M4 11l8 4 8-4' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
+    <!-- 브라우저 탭 아이콘 (사이트 로고와 완벽히 동일한 레이어 SVG) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%234299e1'/><path d='M12 4L4 8l8 4 8-4-8-4zM4 14l8 4 8-4M4 11l8 4 8-4' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
     <!-- CSV 파싱 & 마크다운 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
-            --bg-body: #0d1117;
-            --bg-header: rgba(13, 17, 23, 0.85);
-            --bg-card: #161b22;
-            --bg-card-hover: #21262d;
-            --bg-card-active: #1f2937;
-            --border-color: #30363d;
-            --border-subtle: #21262d;
-            --text-main: #f0f6fc;
-            --text-sub: #8b949e;
-            --tag-bg: rgba(56, 139, 253, 0.15);
-            --tag-text: #58a6ff;
-            --star-color: #f0883e;
-            --accent-border: #388bfd;
-            --series-bg: rgba(163, 113, 247, 0.15);
-            --series-text: #bc8cff;
-            --series-border: rgba(163, 113, 247, 0.35);
+            /* 상단 바와 배경 톤 분리 (다크 모드) */
+            --bg-body: #0a0d12;
+            --bg-header: #141922;
+            --bg-card: #181f2a;
+            --bg-card-hover: #222b3a;
+            --bg-card-active: #1e2c40;
+            --border-color: #263040;
+            --border-subtle: #1c2330;
+            --text-main: #f0f4f8;
+            --text-sub: #8c9ba8;
+            --tag-bg: rgba(66, 153, 225, 0.15);
+            --tag-text: #63b3ed;
+            --star-color: #f6ad55;
+            --accent-border: #4299e1;
+            --series-bg: rgba(159, 122, 234, 0.16);
+            --series-text: #b794f4;
+            --series-border: rgba(159, 122, 234, 0.35);
         }
 
         body.light-theme {
-            --bg-body: #f6f8fa;
-            --bg-header: rgba(255, 255, 255, 0.88);
+            /* 상단 바와 배경 톤 분리 (라이트 모드) */
+            --bg-body: #f4f6f8;
+            --bg-header: #ffffff;
             --bg-card: #ffffff;
-            --bg-card-hover: #eaeef2;
-            --bg-card-active: #ddf4ff;
-            --border-color: #d0d7de;
-            --border-subtle: #e1e4e8;
+            --bg-card-hover: #edf2f7;
+            --bg-card-active: #e2f0fd;
+            --border-color: #dbe0e6;
+            --border-subtle: #e8ecf0;
             --text-main: #1f2328;
             --text-sub: #656d76;
-            --tag-bg: #ddf4ff;
-            --tag-text: #0969da;
-            --star-color: #bf8700;
-            --accent-border: #0969da;
-            --series-bg: #fbefff;
-            --series-text: #8250df;
-            --series-border: #d2a8ff;
+            --tag-bg: #ebf8ff;
+            --tag-text: #3182ce;
+            --star-color: #dd6b20;
+            --accent-border: #3182ce;
+            --series-bg: #f3e8ff;
+            --series-text: #7e22ce;
+            --series-border: #d8b4fe;
         }
 
         * { 
@@ -53,7 +55,7 @@
             margin: 0; 
             padding: 0; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+            transition: background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease;
         }
 
         html, body {
@@ -71,13 +73,12 @@
             width: 100%;
             height: 60px;
             background: var(--bg-header);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .nav-left {
@@ -91,7 +92,7 @@
         .nav-logo-badge {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 7px;
             background: linear-gradient(135deg, #4299e1 0%, #667eea 100%);
             color: #fff;
             padding: 6px 12px;
@@ -101,12 +102,15 @@
             letter-spacing: 0.5px;
         }
 
+        /* 탭 파비콘과 동일한 SVG 아이콘 */
         .nav-logo-badge svg {
             width: 15px;
             height: 15px;
             stroke: #fff;
             stroke-width: 2.2;
             fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         .nav-center {
@@ -119,7 +123,7 @@
             position: relative;
             display: flex;
             align-items: center;
-            background: var(--bg-card);
+            background: var(--bg-body);
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 0 14px;
@@ -176,18 +180,18 @@
             border-color: var(--accent-border);
         }
 
-        /* 2. 메인 뷰포트 레이아웃 (박스 없는 개방형 구조) */
+        /* 2. 메인 뷰포트 레이아웃 */
         main.main-viewport {
             max-width: 1440px;
             margin: 0 auto;
             padding: 24px 32px;
             display: grid;
             grid-template-columns: 340px minmax(0, 1fr);
-            gap: 40px;
+            gap: 0; /* 분리선을 위해 간격 조정 */
             align-items: start;
         }
 
-        /* 좌측: 사이드바 */
+        /* 좌측: 사이드바 + 우측 분리선 */
         aside.sidebar-pane {
             position: sticky;
             top: 84px;
@@ -195,6 +199,8 @@
             flex-direction: column;
             gap: 16px;
             max-height: calc(100vh - 108px);
+            padding-right: 28px;
+            border-right: 1px solid var(--border-color); /* 목록과 본문 사이의 깔끔한 구분선 */
         }
 
         .filter-area {
@@ -256,7 +262,7 @@
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
             display: none;
             flex-direction: column;
             padding: 4px;
@@ -292,7 +298,7 @@
         }
 
         .tag-btn {
-            background: transparent;
+            background: var(--bg-card);
             color: var(--text-sub);
             border: 1px solid var(--border-color);
             padding: 4px 10px;
@@ -329,18 +335,18 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            animation: itemFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            /* 덜컹거림 방지: 순수 페이드인만 적용 */
+            animation: cleanFade 0.2s ease forwards;
         }
 
-        @keyframes itemFadeIn {
-            0% { opacity: 0; transform: translateY(4px); }
-            100% { opacity: 1; transform: translateY(0); }
+        @keyframes cleanFade {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
         }
 
         .archive-item:hover {
             background: var(--bg-card-hover);
             border-color: var(--accent-border);
-            transform: translateX(2px);
         }
 
         .archive-item.active {
@@ -380,12 +386,11 @@
             font-weight: 600;
         }
 
-        /* 우측: 본문 뷰포트 (박스감 제거) */
+        /* 우측: 본문 뷰포트 */
         section.content-pane {
             background: transparent;
             border: none;
-            border-radius: 0;
-            padding: 0;
+            padding-left: 36px;
             min-height: calc(100vh - 108px);
         }
 
@@ -399,13 +404,14 @@
             gap: 14px;
         }
 
+        /* 글 전환 시 튀지 않는 부드러운 페이드 */
         .article-content-wrap {
-            animation: postFadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: contentSmoothFade 0.22s ease-out forwards;
         }
 
-        @keyframes postFadeSlide {
-            0% { opacity: 0; transform: translateY(6px); }
-            100% { opacity: 1; transform: translateY(0); }
+        @keyframes contentSmoothFade {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
         }
 
         .post-header {
@@ -438,7 +444,7 @@
             letter-spacing: 2px;
         }
 
-        /* 💡 🔗 공유 버튼: 명확한 텍스트 뱃지 버튼 */
+        /* 🔗 공유 버튼 */
         .share-badge-btn {
             background: var(--bg-card);
             color: var(--text-main);
@@ -460,7 +466,7 @@
             color: var(--accent-border);
         }
 
-        /* 💡 본문과 이미지의 공존 레이아웃 (매거진 2열 배치) */
+        /* 본문과 이미지 레이아웃 (매거진 2열 배치) */
         .content-body-layout {
             display: flex;
             gap: 32px;
@@ -487,11 +493,11 @@
             position: relative;
             display: block;
             text-decoration: none;
-            border-radius: 12px;
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border-color);
-            transition: transform 0.25s ease, border-color 0.25s ease;
+            transition: border-color 0.2s ease, transform 0.2s ease;
         }
 
         .img-card img {
@@ -503,8 +509,8 @@
         }
 
         .img-card.has-link:hover {
-            transform: translateY(-3px);
             border-color: var(--accent-border);
+            transform: translateY(-2px);
         }
 
         .link-badge-pill {
@@ -525,7 +531,7 @@
             background: var(--accent-border);
         }
 
-        /* 우측 본문 마크다운 영역 */
+        /* 우측 본문 마크다운 */
         .markdown-body {
             flex: 1;
             min-width: 0;
@@ -548,7 +554,7 @@
             color: var(--text-sub);
         }
 
-        /* 유튜브 영상이 있을 경우 본문 상단 전체 폭 배치 */
+        /* 유튜브 영상 */
         .yt-box {
             width: 100%;
             border-radius: 12px;
@@ -614,7 +620,7 @@
             position: fixed;
             bottom: 30px;
             left: 50%;
-            transform: translateX(-50%) translateY(40px) scale(0.95);
+            transform: translateX(-50%) translateY(40px);
             background: rgba(18, 22, 28, 0.95);
             color: #fff;
             padding: 10px 24px;
@@ -626,7 +632,7 @@
             opacity: 0;
             pointer-events: none;
             z-index: 200;
-            transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 0.22s ease, transform 0.22s ease;
         }
 
         body.light-theme #toast {
@@ -637,10 +643,10 @@
 
         #toast.show {
             opacity: 1;
-            transform: translateX(-50%) translateY(0) scale(1);
+            transform: translateX(-50%) translateY(0);
         }
 
-        /* 모바일/태블릿 반응형 */
+        /* 반응형 대응 */
         @media (max-width: 960px) {
             main.main-viewport {
                 grid-template-columns: 1fr;
@@ -650,6 +656,13 @@
             aside.sidebar-pane {
                 position: static;
                 max-height: none;
+                padding-right: 0;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: 24px;
+            }
+            section.content-pane {
+                padding-left: 0;
             }
             .list-scroll-view {
                 max-height: 340px;
@@ -694,7 +707,7 @@
     </div>
 </header>
 
-<!-- 2. 웹사이트 메인 레이아웃 (개방형 뷰포트) -->
+<!-- 2. 웹사이트 메인 레이아웃 -->
 <main class="main-viewport">
     <!-- 좌측 목록 & 필터 영역 -->
     <aside class="sidebar-pane">
@@ -725,7 +738,7 @@
         </div>
     </aside>
 
-    <!-- 우측 본문 열람 뷰포트 (자연스러운 블로그/매거진 뷰) -->
+    <!-- 우측 본문 열람 뷰포트 -->
     <section class="content-pane" id="detail-view">
         <div class="empty-placeholder" id="placeholder-box">
             <span style="font-size: 42px;">📖</span>
@@ -745,7 +758,7 @@
                         <span id="d-date"></span>
                     </div>
                 </div>
-                <!-- 💡 직관적인 🔗 공유 버튼 -->
+                <!-- 🔗 공유 뱃지 버튼 -->
                 <button class="share-badge-btn" onclick="copyPostLink()" title="게시물 링크 복사">
                     <span>🔗</span>
                     <span>공유</span>
@@ -784,7 +797,6 @@
     let currentSelectedId = null;
     let toastTimer = null;
 
-    // 마크다운 외부 링크 새 창 열기 강제
     const renderer = new marked.Renderer();
     renderer.link = function(href, title, text) {
         return `<a target="_blank" rel="noopener noreferrer" href="${href}" title="${title || ''}">${text}</a>`;
@@ -804,7 +816,6 @@
         return isNaN(time) ? 0 : time;
     }
 
-    // 커스텀 정렬 드롭다운 제어
     function toggleCustomSelect(e) {
         if (e) e.stopPropagation();
         document.getElementById('custom-sort-wrap').classList.toggle('open');
@@ -827,7 +838,6 @@
         }
     });
 
-    // 테마 설정
     function toggleTheme() {
         const isLight = document.body.classList.toggle('light-theme');
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
@@ -849,7 +859,7 @@
         toast.innerText = msg;
         if (toastTimer) clearTimeout(toastTimer);
         toast.classList.add('show');
-        toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
     function copyPostLink() {
@@ -896,7 +906,7 @@
                 setupTags();
                 applyFilters();
 
-                // 💡 1. 사이트 처음 들어왔을 때 URL 해시(#)가 있는 경우에만 열고, 없으면 대기 상태 유지
+                // 첫 접속 시 해시(#)가 있을 때만 자동 열기, 없으면 대기 상태 유지
                 const hash = decodeURIComponent(window.location.hash.replace('#', '')).trim();
                 if (hash) {
                     openDetail(hash);
@@ -1007,7 +1017,6 @@
         `).join('');
     }
 
-    // 💡 이미지(링크) 파싱 & 매거진 레이아웃 렌더링
     function renderMedia(rawUrlString) {
         const imgContainer = document.getElementById('d-media-container');
         const ytContainer = document.getElementById('d-yt-container');
@@ -1038,13 +1047,12 @@
                 let imgSrc = item;
                 let targetUrl = '';
 
-                // 1. 신규 문법: 이미지URL(링크URL)
+                // 이미지(링크) 형식 파싱: https://img.png(https://site.com)
                 const match = item.match(/^(https?:\/\/[^\s()]+)\((https?:\/\/[^\s()]+)\)$/);
                 if (match) {
                     imgSrc = match[1].trim();
                     targetUrl = match[2].trim();
                 } else if (item.includes('>')) {
-                    // 구버전(>) 호환
                     const parts = item.split('>');
                     imgSrc = parts[0].trim();
                     targetUrl = parts[1].trim();
@@ -1067,7 +1075,6 @@
             }
         });
 
-        // 유튜브 렌더링
         if (ytHtml) {
             ytContainer.innerHTML = ytHtml;
             ytContainer.style.display = 'block';
@@ -1076,7 +1083,6 @@
             ytContainer.style.display = 'none';
         }
 
-        // 이미지 렌더링 (사이드 포스터 형태)
         if (imgHtml) {
             imgContainer.innerHTML = `<div class="img-grid">${imgHtml}</div>`;
             imgContainer.style.display = 'block';
@@ -1130,6 +1136,7 @@
         const articleBox = document.getElementById('article-box');
         articleBox.style.display = 'block';
 
+        // 부드러운 페이드 재적용
         articleBox.classList.remove('article-content-wrap');
         void articleBox.offsetWidth;
         articleBox.classList.add('article-content-wrap');
@@ -1152,7 +1159,6 @@
         }
     }
 
-    // 초기 실행
     initTheme();
     loadData();
 </script>
