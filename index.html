@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAL | Media Archive Log</title>
-    <!-- 브라우저 탭 아이콘 (사이트 로고와 동일한 레이어 SVG) -->
+    <!-- 브라우저 탭 아이콘 (사이트 로고와 완벽 일치) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%234299e1'/><path d='M12 4L4 8l8 4 8-4-8-4zM4 14l8 4 8-4M4 11l8 4 8-4' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
     <!-- CSV 파싱 & 마크다운 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -56,11 +56,19 @@
             transition: background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease;
         }
 
-        html, body {
-            min-height: 100%;
+        /* 💡 화이트 모드 하단 잘림 버그 완벽 해결 */
+        html {
+            height: 100%;
+            background-color: var(--bg-body);
+        }
+
+        body {
+            min-height: 100vh;
             background-color: var(--bg-body);
             color: var(--text-main);
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         /* 1. 상단 글로벌 네비게이션 헤더 */
@@ -76,7 +84,8 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 24px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            flex-shrink: 0;
         }
 
         .nav-left {
@@ -183,18 +192,20 @@
         /* 2. 메인 뷰포트 레이아웃 */
         main.main-viewport {
             max-width: 1440px;
+            width: 100%;
             margin: 0 auto;
             padding: 24px 32px;
             display: grid;
             grid-template-columns: 340px minmax(0, 1fr);
             gap: 0;
             align-items: start;
-            transition: all 0.3s ease;
+            flex: 1;
+            transition: max-width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* 💡 글이 닫혀 있을 때 (홈 상태): 목록이 전체 화면을 차지하도록 확장 */
+        /* 💡 글이 닫혀 있을 때 (홈 상태): 부드러운 와이드 전환 */
         main.main-viewport.closed-view {
-            max-width: 880px;
+            max-width: 860px;
             grid-template-columns: 1fr;
         }
         main.main-viewport.closed-view aside.sidebar-pane {
@@ -203,11 +214,15 @@
             position: static;
             max-height: none;
         }
+        main.main-viewport.closed-view .list-scroll-view {
+            max-height: none;
+            overflow-y: visible;
+        }
         main.main-viewport.closed-view section.content-pane {
             display: none;
         }
 
-        /* 좌측: 사이드바 + 우측 분리선 */
+        /* 좌측: 사이드바 */
         aside.sidebar-pane {
             position: sticky;
             top: 84px;
@@ -324,7 +339,7 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            transition: all 0.2s ease;
+            transition: all 0.18s ease;
         }
 
         .tag-btn:hover { border-color: var(--accent-border); color: var(--text-main); }
@@ -346,12 +361,12 @@
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 12px 14px;
+            padding: 13px 15px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             gap: 6px;
-            animation: cleanFade 0.2s ease forwards;
+            animation: cleanFade 0.18s ease-out forwards;
         }
 
         @keyframes cleanFade {
@@ -466,7 +481,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: all 0.2s ease;
+            transition: all 0.18s ease;
         }
 
         .action-badge-btn:hover {
@@ -504,7 +519,7 @@
             text-decoration: none;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
             border: 1px solid var(--border-color);
             transition: border-color 0.2s ease, transform 0.2s ease;
         }
@@ -695,7 +710,6 @@
 
 <!-- 1. 상단 글로벌 네비게이션 헤더 -->
 <header class="global-nav">
-    <!-- 💡 로고 클릭 시 글 닫기 및 홈 화면 복귀 -->
     <div class="nav-left" onclick="closeDetail()" title="메인 화면으로 돌아가기">
         <div class="nav-logo-badge">
             <svg viewBox="0 0 24 24"><path d="M12 4L4 8l8 4 8-4-8-4zM4 14l8 4 8-4M4 11l8 4 8-4"/></svg>
@@ -918,12 +932,11 @@
                 setupTags();
                 applyFilters();
 
-                // URL 해시(#)가 명시되어 있을 때만 글 열기
                 const hash = decodeURIComponent(window.location.hash.replace('#', '')).trim();
                 if (hash) {
                     openDetail(hash);
                 } else {
-                    closeDetail(); // 초기에는 닫힌 전체 목록 상태로 대기
+                    closeDetail();
                 }
             },
             error: function() {
@@ -1145,7 +1158,6 @@
 
         history.replaceState(null, null, '#' + encodeURIComponent(id));
 
-        // 💡 본문 열기: 2열 분할 레이아웃 활성화
         document.getElementById('main-viewport').classList.remove('closed-view');
 
         const articleBox = document.getElementById('article-box');
@@ -1171,7 +1183,6 @@
         }
     }
 
-    // 💡 게시물 닫기 (메인 화면 및 넓은 목록 뷰 복귀)
     function closeDetail() {
         currentSelectedId = null;
         history.replaceState(null, null, window.location.pathname);
